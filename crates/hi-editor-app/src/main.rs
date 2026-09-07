@@ -252,8 +252,12 @@ fn open_url(url: String) -> Result<(), String> {
     }
     #[cfg(target_os = "windows")]
     {
+        // CREATE_NO_WINDOW：避免 windows_subsystem=windows 的正式版闪现命令行黑框
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         std::process::Command::new("cmd")
             .args(["/c", "start", "", &url])
+            .creation_flags(CREATE_NO_WINDOW)
             .spawn()
             .map_err(|e| format!("打开失败：{e}"))?;
     }

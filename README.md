@@ -19,19 +19,23 @@ plugins/                  # 内置插件：markdown / json / xml / plaintext / c
 
 ## 构建与运行（开发）
 
+**一键编译（推荐）**：双击或执行 `build-release.bat` —— 自动编译 release 版、同步插件到 `plugins\*\bin\`，并可选择立即启动。
+
+手动步骤：
+
 ```bash
 # 1. 构建全部（含插件动态库）
-cargo build
+cargo build --release
 
 # 2. 把插件动态库同步到 plugins/<name>/bin/（Linux/macOS 用 .so/.dylib）
-cp target/debug/hieditor_json.dll plugins/json/bin/ && \
-  cp target/debug/hieditor_xml.dll plugins/xml/bin/ && \
-  cp target/debug/hieditor_markdown.dll plugins/markdown/bin/ && \
-  cp target/debug/hieditor_plaintext.dll plugins/plaintext/bin/ && \
-  cp target/debug/hieditor_code.dll plugins/code/bin/
+cp target/release/hieditor_json.dll plugins/json/bin/ && \
+  cp target/release/hieditor_xml.dll plugins/xml/bin/ && \
+  cp target/release/hieditor_markdown.dll plugins/markdown/bin/ && \
+  cp target/release/hieditor_plaintext.dll plugins/plaintext/bin/ && \
+  cp target/release/hieditor_code.dll plugins/code/bin/
 
 # 3. 运行（指定插件目录；也可放入 exe 同级 plugins/）
-HIEDITOR_PLUGINS_DIR=./plugins cargo run -p hi-editor-app
+HIEDITOR_PLUGINS_DIR=./plugins cargo run -p hi-editor-app --release
 ```
 
 ## 测试
