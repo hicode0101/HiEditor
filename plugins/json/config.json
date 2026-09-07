@@ -1,0 +1,22 @@
+{
+  "id": "com.hieditor.json",
+  "name": "JSON 支持",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "enabled": true,
+  "author": "HiEditor",
+  "description": "JSON 语法高亮、格式化与压缩",
+  "entry": {
+    "windows": "bin/hieditor_json.dll",
+    "linux": "bin/hieditor_json.so",
+    "macos": "bin/hieditor_json.dylib"
+  },
+  "languages": [
+    { "id": "json", "name": "JSON", "extensions": [".json", ".jsonc"], "highlight": true }
+  ],
+  "formatters": [
+    { "id": "json.pretty", "label": "JSON 格式化", "language": "json", "command": "pretty", "shortcut": "Ctrl+Shift+J" },
+    { "id": "json.minify", "label": "JSON 压缩", "language": "json", "command": "minify", "shortcut": "Ctrl+Alt+J" }
+  ],
+  "menus": { "context": ["format"] }
+}

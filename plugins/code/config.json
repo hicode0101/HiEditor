@@ -1,0 +1,31 @@
+{
+  "id": "com.hieditor.code",
+  "name": "代码语言合集",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "enabled": true,
+  "author": "HiEditor",
+  "description": "HTML/CSS/JS/TS/Python/Java/C#/C/C++/Go/Rust/SQL/YAML/Shell/INI-TOML/Batch 语法高亮",
+  "entry": {
+    "windows": "bin/hieditor_code.dll",
+    "linux": "bin/hieditor_code.so",
+    "macos": "bin/hieditor_code.dylib"
+  },
+  "languages": [
+    { "id": "html", "name": "HTML", "extensions": [".html", ".htm"], "highlight": true },
+    { "id": "css", "name": "CSS", "extensions": [".css"], "highlight": true },
+    { "id": "javascript", "name": "JavaScript", "extensions": [".js", ".mjs", ".cjs", ".jsx"], "highlight": true },
+    { "id": "typescript", "name": "TypeScript", "extensions": [".ts", ".tsx", ".mts", ".cts"], "highlight": true },
+    { "id": "python", "name": "Python", "extensions": [".py", ".pyw"], "highlight": true },
+    { "id": "java", "name": "Java", "extensions": [".java"], "highlight": true },
+    { "id": "csharp", "name": "C#", "extensions": [".cs"], "highlight": true },
+    { "id": "cpp", "name": "C/C++", "extensions": [".c", ".h", ".cpp", ".hpp", ".cc", ".cxx"], "highlight": true },
+    { "id": "go", "name": "Go", "extensions": [".go"], "highlight": true },
+    { "id": "rust", "name": "Rust", "extensions": [".rs"], "highlight": true },
+    { "id": "sql", "name": "SQL", "extensions": [".sql"], "highlight": true },
+    { "id": "yaml", "name": "YAML", "extensions": [".yml", ".yaml"], "highlight": true },
+    { "id": "shell", "name": "Shell", "extensions": [".sh", ".bash", ".zsh"], "highlight": true },
+    { "id": "ini", "name": "INI/TOML", "extensions": [".ini", ".toml", ".cfg", ".conf"], "highlight": true },
+    { "id": "batch", "name": "Batch", "extensions": [".bat", ".cmd"], "highlight": true }
+  ]
+}

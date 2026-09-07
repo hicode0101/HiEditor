@@ -1,0 +1,12 @@
+[package]
+name = "hi-plugin-xml"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "hieditor_xml"
+crate-type = ["cdylib"]
+
+[dependencies]
+hi-editor-plugin-abi = { path = "../../crates/hi-editor-plugin-abi" }
+quick-xml = { workspace = true }

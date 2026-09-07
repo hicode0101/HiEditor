@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/hi-editor-plugin-abi",
+    "crates/hi-editor-core",
+    "crates/hi-editor-plugin",
+    "crates/hi-editor-app",
+    "plugins/json",
+    "plugins/xml",
+    "plugins/markdown",
+    "plugins/plaintext",
+    "plugins/code",
+]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+encoding_rs = "0.8"
+chardetng = "0.1"
+libloading = "0.8"
+quick-xml = "0.37"
+
+[profile.release]
+lto = "thin"

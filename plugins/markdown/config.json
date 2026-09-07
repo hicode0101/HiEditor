@@ -1,0 +1,19 @@
+{
+  "id": "com.hieditor.markdown",
+  "name": "Markdown 支持",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "enabled": true,
+  "author": "HiEditor",
+  "description": "Markdown 所见即所得编辑、格式工具栏与语法高亮",
+  "entry": {
+    "windows": "bin/hieditor_markdown.dll",
+    "linux": "bin/hieditor_markdown.so",
+    "macos": "bin/hieditor_markdown.dylib"
+  },
+  "languages": [
+    { "id": "markdown", "name": "Markdown", "extensions": [".md", ".markdown", ".mdown", ".mkd"], "highlight": true }
+  ],
+  "toolbar": { "id": "markdown-wysiwyg" },
+  "preview": { "engine": "wysiwyg" }
+}

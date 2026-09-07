@@ -1,0 +1,17 @@
+{
+  "id": "com.hieditor.plaintext",
+  "name": "纯文本",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "enabled": true,
+  "author": "HiEditor",
+  "description": "无高亮的纯文本兜底",
+  "entry": {
+    "windows": "bin/hieditor_plaintext.dll",
+    "linux": "bin/hieditor_plaintext.so",
+    "macos": "bin/hieditor_plaintext.dylib"
+  },
+  "languages": [
+    { "id": "plaintext", "name": "纯文本", "extensions": [".txt", ".log", ".text"], "highlight": false }
+  ]
+}

@@ -1,0 +1,11 @@
+[package]
+name = "hi-plugin-markdown"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "hieditor_markdown"
+crate-type = ["cdylib"]
+
+[dependencies]
+hi-editor-plugin-abi = { path = "../../crates/hi-editor-plugin-abi" }

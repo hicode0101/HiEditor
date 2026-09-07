@@ -1,0 +1,12 @@
+[package]
+name = "hi-plugin-json"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "hieditor_json"
+crate-type = ["cdylib"]
+
+[dependencies]
+hi-editor-plugin-abi = { path = "../../crates/hi-editor-plugin-abi" }
+serde_json = { workspace = true, features = ["preserve_order"] }

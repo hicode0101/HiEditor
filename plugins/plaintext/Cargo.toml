@@ -1,0 +1,11 @@
+[package]
+name = "hi-plugin-plaintext"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "hieditor_plaintext"
+crate-type = ["cdylib"]
+
+[dependencies]
+hi-editor-plugin-abi = { path = "../../crates/hi-editor-plugin-abi" }

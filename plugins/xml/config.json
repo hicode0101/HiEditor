@@ -1,0 +1,22 @@
+{
+  "id": "com.hieditor.xml",
+  "name": "XML 支持",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "enabled": true,
+  "author": "HiEditor",
+  "description": "XML 语法高亮、格式化与压缩",
+  "entry": {
+    "windows": "bin/hieditor_xml.dll",
+    "linux": "bin/hieditor_xml.so",
+    "macos": "bin/hieditor_xml.dylib"
+  },
+  "languages": [
+    { "id": "xml", "name": "XML", "extensions": [".xml", ".svg", ".xaml", ".xsl", ".xslt", ".csproj", ".vbproj", ".props", ".targets", ".resx", ".config", ".plist"], "highlight": true }
+  ],
+  "formatters": [
+    { "id": "xml.pretty", "label": "XML 格式化", "language": "xml", "command": "pretty", "shortcut": "Ctrl+Shift+L" },
+    { "id": "xml.minify", "label": "XML 压缩", "language": "xml", "command": "minify", "shortcut": "Ctrl+Alt+L" }
+  ],
+  "menus": { "context": ["format"] }
+}
