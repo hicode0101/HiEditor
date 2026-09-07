@@ -2,7 +2,7 @@
 
 import { state, activeTab } from "./state.js";
 import { openMenu } from "./ui.js";
-import { updateStatus, setZoom, getZoom, persistActiveFromEditor } from "./editor.js";
+import { updateStatus } from "./editor.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -53,7 +53,7 @@ function zoomItems() {
     { label: "缩小", shortcut: "Ctrl+减号", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: -10 })) },
     { label: "恢复默认缩放", shortcut: "Ctrl+0", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: 0 })) },
     { sep: true },
-    { label: `${getZoom()}%（30% – 500%）`, disabled: true },
+    { label: `当前缩放（30% – 500%）`, disabled: true },
   ];
 }
 

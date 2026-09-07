@@ -2,7 +2,10 @@
 
 import { activeTab } from "./state.js";
 import { openPopover } from "./ui.js";
-import { replaceSelection, setHeading, toggleLinePrefix, insertBlock, markDirty, editorEl } from "./editor.js";
+import {
+  replaceSelection, setHeading, toggleLinePrefix, toggleNumberedPrefix,
+  insertBlock, markDirty, transformSelection,
+} from "./editor.js";
 
 export function initToolbars() {
   // ===== 默认工具栏（非 Markdown：全部禁用，保持基准截图一形态） =====
@@ -40,46 +43,18 @@ export function initToolbars() {
 }
 
 function clearFormatting() {
-  const ed = editorEl();
-  const { selectionStart: s, selectionEnd: e, value } = ed;
-  const selected = value.slice(s, e);
-  const cleaned = selected
-    .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/\*(.*?)\*/g, "$1")
-    .replace(/~~(.*?)~~/g, "$1")
-    .replace(/`(.*?)`/g, "$1")
-    .replace(/<u>(.*?)<\/u>/g, "$1");
-  ed.setRangeText(cleaned, s, e, "select");
-  markDirty();
-}
-
-function toggleNumberedPrefix() {
-  const ed = editorEl();
-  const { selectionStart: s, selectionEnd: e, value } = ed;
-  const lineStart = value.lastIndexOf("\n", s - 1) + 1;
-  let lineEnd = value.indexOf("\n", e);
-  if (lineEnd === -1) lineEnd = value.length;
-  const lines = value.slice(lineStart, lineEnd).split("\n");
-  const allNumbered = lines.every((l) => /^\s*\d+\. /.test(l));
-  const out = lines
-    .map((l, i) => {
-      const stripped = l.replace(/^(\s*)(\d+\. |[-*+] |- \[[ x]\] )/, "$1");
-      return allNumbered ? stripped : stripped.replace(/^(\s*)/, `$1${i + 1}. `);
-    })
-    .join("\n");
-  ed.setSelectionRange(lineStart, lineEnd);
-  ed.setRangeText(out, lineStart, lineEnd, "end");
-  markDirty();
+  transformSelection((selected) =>
+    selected
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/~~(.*?)~~/g, "$1")
+      .replace(/`(.*?)`/g, "$1")
+      .replace(/<u>(.*?)<\/u>/g, "$1")
+  );
 }
 
 function insertLink() {
-  const ed = editorEl();
-  const sel = ed.value.slice(ed.selectionStart, ed.selectionEnd);
-  if (sel) {
-    replaceSelection("[", "](https://)", sel);
-  } else {
-    replaceSelection("[", "](https://)", "链接文本");
-  }
+  replaceSelection("[", "](https://)", "链接文本");
 }
 
 const HEADINGS = [

@@ -7,7 +7,7 @@ import { initToolbars } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
 import { newTab, switchTab, openPath, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
-import { setZoom, setWrap, updateStatus, editorEl } from "./editor.js";
+import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance } from "./editor.js";
 import { setIcon } from "./icons.js";
 import { applyTheme } from "./theme.js";
 import { scheduleSessionSave, flushSession } from "./session.js";
@@ -29,12 +29,25 @@ async function boot() {
   state.registry = await invoke("get_registry");
   state.settings = await invoke("get_settings");
   applyTheme(state.settings.theme || "light");
+  setEditorDark((state.settings.theme || "light") === "dark");
   document.documentElement.style.setProperty(
     "--editor-font-size",
     `${state.settings.font_size || 15}px`
   );
-  editorEl().style.setProperty("tab-size", state.settings.tab_width || 4);
-  if (state.settings.wrap_default) setWrap(true);
+
+  // 编辑器内核（CodeMirror 6）：语法高亮 / IME / 撤销
+  // 注意：必须用根路径（/vendor/cm.js），相对路径会被解析到 /src/vendor/ 导致 404
+  const cmmod = await import("/vendor/cm.js");
+  initEditorInstance(
+    cmmod.createEditor(editorHostEl(), {
+      doc: "",
+      langId: state.settings.new_tab_language || "plaintext",
+      dark: (state.settings.theme || "light") === "dark",
+      wrap: !!state.settings.wrap_default,
+      tabWidth: state.settings.tab_width || 4,
+      onUpdate: (u) => handleCmUpdate(u),
+    })
+  );
 
   // 会话恢复（FR-10.2）：恢复上次退出/崩溃时的标签（含未保存内容）
   const restored = await restoreSession();
@@ -205,8 +218,7 @@ function getZoomSafe() {
 }
 
 function toggleWrap() {
-  const ed = editorEl();
-  setWrap(!ed.classList.contains("wrap"));
+  setWrap(!isWrapOn());
 }
 
 function insertTimeDate() {
@@ -226,14 +238,10 @@ async function runFormatterById(id) {
   try {
     const out = await invoke("format_text", {
       formatterId: id,
-      text: editorEl().value,
+      text: getDocText(),
       indent: state.settings.format_indent ?? 4,
     });
-    editorEl().value = out;
-    tab.text = out;
-    tab.dirty = true;
-    tab.eol = tab.eol; // 换行符由保存时统一
-    updateStatus();
+    replaceDoc(out);
   } catch (e) {
     const { showDialog } = await import("./ui.js");
     const label = f.label || id;
@@ -241,35 +249,23 @@ async function runFormatterById(id) {
   }
 }
 
-function bindEditorEvents() {
-  const ed = editorEl();
-  ed.addEventListener("input", () => {
-    const tab = activeTab();
-    if (!tab) return;
-    tab.text = ed.value;
+// CM6 更新回调：同步标签状态、脏标记、状态栏与会话（FR-8/FR-10）
+function handleCmUpdate(u) {
+  const tab = activeTab();
+  if (!tab) return;
+  if (u.docChanged) {
+    tab.text = u.state.doc.toString();
     if (!tab.dirty) {
       tab.dirty = true;
       window.dispatchEvent(new CustomEvent("tabs-refresh"));
     }
-    updateStatus();
-    // 轻量状态栏更新：同时刷新窗口标题脏标记
     document.title = `${tab.title}${tab.dirty ? " *" : ""} - HiEditor`;
     scheduleSessionSave();
-  });
-  ["keyup", "click"].forEach((ev) => ed.addEventListener(ev, updateStatus));
-  ed.addEventListener("scroll", () => {
-    const tab = activeTab();
-    if (tab) tab.scroll = ed.scrollTop;
-  });
-  ed.addEventListener("keydown", (e) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
-      ed.setRangeText("\t", ed.selectionStart, ed.selectionEnd, "end");
-      const tab = activeTab();
-      if (tab) { tab.dirty = true; }
-      updateStatus();
-    }
-  });
+  }
+  if (u.selectionSet || u.docChanged) updateStatus();
+}
+
+function bindEditorEvents() {
   // 打开文件后刷新
   window.addEventListener("tab-updated", switchToolbar);
 }

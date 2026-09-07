@@ -2,7 +2,11 @@
 
 import { state, activeTab, formattersFor } from "./state.js";
 import { openMenu, showDialog, showBanner } from "./ui.js";
-import { editorEl, setHeading, replaceSelection } from "./editor.js";
+import {
+  focusEditor, getSelectionRange, replaceSelection, setHeading, isWrapOn,
+  editorUndo, editorRedo, cutSelection, copySelection, pasteFromClipboard,
+  deleteSelection, selectAll,
+} from "./editor.js";
 import {
   openFile, newTab, saveActive, saveActiveAs, saveAll, closeTab, printDocument,
 } from "./files.js";
@@ -50,37 +54,17 @@ function fileItems() {
   ];
 }
 
-function cutCopyPaste(kind) {
-  const ed = editorEl();
-  ed.focus();
-  const ok = document.execCommand(kind);
-  if (!ok && kind === "paste") {
-    showBanner({ message: "请在编辑区内使用 Ctrl+V 粘贴。", info: true, autoHideMs: 2000 });
-  }
-}
-
-function timeDate() {
-  const d = new Date();
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  replaceSelection("", "", `${hh}:${mm} ${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`);
-}
-
 async function runFormatter(f) {
   const tab = activeTab();
   if (!tab) return;
-  const { editorEl: ed } = await import("./editor.js");
-  const text = ed().value;
+  const { getDocText, replaceDoc } = await import("./editor.js");
   try {
     const out = await window.__TAURI__.core.invoke("format_text", {
       formatterId: f.id,
-      text,
+      text: getDocText(),
       indent: state.settings.format_indent ?? 4,
     });
-    ed().value = out;
-    tab.text = out;
-    tab.dirty = true;
-    ed().dispatchEvent(new Event("input"));
+    replaceDoc(out);
   } catch (e) {
     showDialog({ title: `${f.label}失败`, body: String(e) });
   }
@@ -88,17 +72,17 @@ async function runFormatter(f) {
 
 function editItems() {
   const tab = activeTab();
-  const ed = editorEl();
-  const hasSel = tab && ed.selectionStart !== ed.selectionEnd;
+  const { from, to } = getSelectionRange();
+  const hasSel = tab && from !== to;
   const fmts = tab ? formattersFor(tab.lang) : [];
   return [
-    { label: "撤销", shortcut: "Ctrl+Z", action: () => { editorEl().focus(); document.execCommand("undo"); } },
-    { label: "重做", shortcut: "Ctrl+Y", action: () => { editorEl().focus(); document.execCommand("redo"); } },
+    { label: "撤销", shortcut: "Ctrl+Z", action: editorUndo },
+    { label: "重做", shortcut: "Ctrl+Y", action: editorRedo },
     { sep: true },
-    { label: "剪切", shortcut: "Ctrl+X", disabled: !hasSel, action: () => cutCopyPaste("cut") },
-    { label: "复制", shortcut: "Ctrl+C", disabled: !hasSel, action: () => cutCopyPaste("copy") },
-    { label: "粘贴", shortcut: "Ctrl+V", action: () => cutCopyPaste("paste") },
-    { label: "删除", shortcut: "Del", disabled: !hasSel, action: () => { editorEl().setRangeText("", editorEl().selectionStart, editorEl().selectionEnd, "end"); } },
+    { label: "剪切", shortcut: "Ctrl+X", disabled: !hasSel, action: cutSelection },
+    { label: "复制", shortcut: "Ctrl+C", disabled: !hasSel, action: copySelection },
+    { label: "粘贴", shortcut: "Ctrl+V", action: pasteFromClipboard },
+    { label: "删除", shortcut: "Del", disabled: !hasSel, action: deleteSelection },
     { sep: true },
     { label: "查找", shortcut: "Ctrl+F", disabled: true }, // M1（FR-4）
     { label: "查找下一个", shortcut: "F3", disabled: true },
@@ -106,7 +90,7 @@ function editItems() {
     { label: "替换", shortcut: "Ctrl+H", disabled: true },
     { label: "转到…", shortcut: "Ctrl+G", disabled: true },
     { sep: true },
-    { label: "全选", shortcut: "Ctrl+A", action: () => { editorEl().focus(); editorEl().select(); } },
+    { label: "全选", shortcut: "Ctrl+A", action: selectAll },
     { label: "时间/日期", shortcut: "F5", action: timeDate },
     ...(fmts.length
       ? [
@@ -137,7 +121,7 @@ function viewItems() {
     {
       label: "自动换行",
       shortcut: "Alt+Z",
-      checked: document.getElementById("editor").classList.contains("wrap"),
+      checked: isWrapOn(),
       action: () => window.dispatchEvent(new CustomEvent("toggle-wrap")),
     },
     {

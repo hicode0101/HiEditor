@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>无标题 - HiEditor</title>
+  <script>
+    // 临时诊断：前端错误写入窗口标题
+    window.onerror = function (msg, src, line, col) {
+      document.title = "ERR:" + msg + " @" + String(src).split("/").pop() + ":" + line;
+    };
+    window.onunhandledrejection = function (ev) {
+      document.title = "REJ:" + ((ev.reason && ev.reason.message) || ev.reason);
+    };
+  </script>
   <link rel="stylesheet" href="./styles/main.css" />
 </head>
 <body>
@@ -80,9 +89,9 @@
     </div>
   </nav>
 
-  <!-- C 区：编辑区 -->
+  <!-- C 区：编辑区（CodeMirror 6 宿主） -->
   <main id="content">
-    <textarea id="editor" spellcheck="false" wrap="off" aria-label="编辑区"></textarea>
+    <div id="editor"></div>
     <!-- 设置页（UI-5.8）：替换编辑区显示 -->
     <section id="settings-page" hidden></section>
   </main>

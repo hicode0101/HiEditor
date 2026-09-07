@@ -1,64 +1,104 @@
-// 编辑区（UI-3）：单一 textarea 承载活动标签，负责行列统计、缩放、自动换行、
-// Markdown 源码插入（FR-7.4 源码模式规则）。WYSIWYG（UI-6）由后续里程碑接入。
+// 编辑区（UI-3/UI-6）：CodeMirror 6 内核承载（虚拟滚动、语法高亮、IME、撤销）。
+// 本模块是适配层：对外提供与 textarea 时代相同的函数签名，内部全部走 CM6 dispatch。
+// 语法高亮配色见 ui/src-cm/cm-entry.js（FR-17.4）。
 
 import { state, activeTab } from "./state.js";
+import { scheduleSessionSave } from "./session.js";
+import { undo as cmUndo, redo as cmRedo } from "/vendor/cm.js";
 
-export const editorEl = () => document.getElementById("editor");
+let cm = null; // createEditor 返回的 API（view/setDoc/setLanguage/setDark/setWrap/focus）
+let wrapOn = false;
+
+export function initEditorInstance(api) {
+  cm = api;
+  api.view.scrollDOM.addEventListener("scroll", () => {
+    const tab = activeTab();
+    if (tab) tab.scroll = api.view.scrollDOM.scrollTop;
+  });
+}
+
+export function editorHostEl() {
+  return document.getElementById("editor");
+}
+
+export function focusEditor() {
+  if (cm) cm.focus();
+}
+
+export function isEditorReady() {
+  return !!cm;
+}
+
+export function getDocText() {
+  return cm ? cm.view.state.doc.toString() : "";
+}
+
+export function replaceDoc(text) {
+  if (!cm) return;
+  cm.view.dispatch({ changes: { from: 0, to: cm.view.state.doc.length, insert: text } });
+}
+
+export function getSelectionRange() {
+  const m = cm.view.state.selection.main;
+  return { from: m.from, to: m.to };
+}
+
+export function getSelectedText() {
+  const { from, to } = getSelectionRange();
+  return cm.view.state.sliceDoc(from, to);
+}
+
+export function setSelection(from, to) {
+  cm.view.dispatch({ selection: { anchor: from, head: to }, scrollIntoView: true });
+}
+
+export function selectAll() {
+  if (!cm) return;
+  cm.view.dispatch({ selection: { anchor: 0, head: cm.view.state.doc.length }, scrollIntoView: true });
+  focusEditor();
+}
+
+export function deleteSelection() {
+  const { from, to } = getSelectionRange();
+  if (from === to) return;
+  cm.view.dispatch({ changes: { from, to } });
+  markDirty();
+}
+
+// ===== 标签页装载/持久化 =====
 
 export function loadActiveIntoEditor() {
   const tab = activeTab();
-  const ed = editorEl();
-  if (!tab) return;
-  ed.value = tab.text;
-  ed.classList.toggle("wrap", isWrapOn());
-  ed.setAttribute("wrap", isWrapOn() ? "soft" : "off");
-  ed.scrollTop = tab.scroll;
-  ed.selectionStart = ed.selectionEnd = tab.cursor;
+  if (!tab || !cm) return;
+  cm.setState({
+    doc: tab.text,
+    langId: tab.lang,
+    dark: isDarkTheme(),
+    wrap: wrapOn,
+    scroll: tab.scroll,
+    cursor: tab.cursor,
+  });
   updateStatus();
 }
 
 export function persistActiveFromEditor() {
   const tab = activeTab();
-  const ed = editorEl();
-  if (!tab) return;
-  tab.text = ed.value;
-  tab.scroll = ed.scrollTop;
-  tab.cursor = ed.selectionStart;
+  if (!tab || !cm) return;
+  tab.text = cm.view.state.doc.toString();
+  tab.scroll = cm.view.scrollDOM.scrollTop;
+  tab.cursor = cm.view.state.selection.main.head;
 }
 
-export function isWrapOn() {
-  return document.getElementById("editor").classList.contains("wrap");
-}
-
-export function setWrap(on) {
-  const ed = editorEl();
-  ed.classList.toggle("wrap", on);
-  ed.setAttribute("wrap", on ? "soft" : "off");
-}
-
-export function setZoom(percent) {
-  const tab = activeTab();
-  if (tab) tab.zoom = percent;
-  document.documentElement.style.setProperty("--zoom", String(percent));
-  const seg = document.getElementById("st-zoom");
-  if (seg) seg.textContent = `${percent}%`;
-}
-
-export function getZoom() {
-  const tab = activeTab();
-  return tab ? tab.zoom : 100;
-}
+// ===== 状态栏（UI-4）=====
 
 export function updateStatus() {
   const tab = activeTab();
-  if (!tab) return;
-  const ed = editorEl();
-  const upto = ed.value.slice(0, ed.selectionStart);
-  const line = (upto.match(/\n/g) || []).length + 1;
-  const lastNl = upto.lastIndexOf("\n");
-  const col = ed.selectionStart - lastNl;
-  document.getElementById("st-linecol").textContent = `行 ${line}, 列 ${col}`;
-  const chars = [...ed.value].length; // Unicode 码点计数（FR-3.8）
+  if (!tab || !cm) return;
+  const doc = cm.view.state.doc;
+  const head = cm.view.state.selection.main.head;
+  const line = doc.lineAt(head);
+  document.getElementById("st-linecol").textContent = `行 ${line.number}, 列 ${head - line.from + 1}`;
+  const chars = [...doc.toString()].length; // Unicode 码点计数（FR-3.8）
   document.getElementById("st-chars").textContent = `${chars} 个字符`;
   document.getElementById("st-lang").textContent = langLabel(tab);
   document.getElementById("st-eol").textContent = eolLabel(tab.eol);
@@ -78,77 +118,199 @@ function encLabel(key) {
   return hit ? hit[1] : key;
 }
 
-// ===== 源码编辑辅助（FR-7.4） =====
+// ===== 视图设置 =====
 
-export function replaceSelection(before, after, placeholder = "") {
-  const ed = editorEl();
-  const { selectionStart: s, selectionEnd: e, value } = ed;
-  const selected = value.slice(s, e);
-  if (selected) {
-    ed.setRangeText(before + selected + after, s, e, "select");
-    ed.selectionStart = s + before.length;
-    ed.selectionEnd = s + before.length + selected.length;
-  } else {
-    const text = before + placeholder + after;
-    ed.setRangeText(text, s, e, "end");
-    ed.selectionStart = s + before.length;
-    ed.selectionEnd = s + before.length + placeholder.length;
-  }
-  markDirty();
-  updateStatus();
-  ed.focus();
+export function isWrapOn() {
+  return wrapOn;
 }
 
-export function forEachSelectedLine(fn) {
-  const ed = editorEl();
-  const { selectionStart: s, selectionEnd: e, value } = ed;
-  const lineStart = value.lastIndexOf("\n", s - 1) + 1;
-  let lineEnd = value.indexOf("\n", e);
-  if (lineEnd === -1) lineEnd = value.length;
-  const block = value.slice(lineStart, lineEnd);
-  ed.setSelectionRange(lineStart, lineEnd);
-  ed.setRangeText(fn(block), lineStart, lineEnd, "end");
-  ed.setSelectionRange(lineStart, lineStart + fn(block).length);
-  markDirty();
-  updateStatus();
-  ed.focus();
+export function setWrap(on) {
+  wrapOn = on;
+  if (cm) cm.setWrap(on);
 }
 
-export function setHeading(level) {
-  const prefix = level === 0 ? "" : "#".repeat(level) + " ";
-  forEachSelectedLine((line) => {
-    const stripped = line.replace(/^#{1,6}\s*/, "");
-    return prefix + stripped;
-  });
+export function setEditorDark(dark) {
+  if (cm) cm.setDark(dark);
 }
 
-export function toggleLinePrefix(prefix) {
-  forEachSelectedLine((line) => {
-    const stripped = line.replace(/^(\s*)([-*+] |\d+\. |- \[[ x]\] )/, "$1");
-    const bare = stripped.replace(/^(\s*)/, "$1");
-    return bare.startsWith(prefix) ? bare : prefix + bare;
-  });
+export function setEditorLanguage(langId) {
+  if (cm) cm.setLanguage(langId);
 }
 
-export function insertBlock(text) {
-  const ed = editorEl();
-  const s = ed.selectionStart;
-  const atLineStart = s === 0 || ed.value[s - 1] === "\n";
-  const insert = (atLineStart ? "" : "\n") + text;
-  ed.setRangeText(insert, s, ed.selectionEnd, "end");
-  markDirty();
-  updateStatus();
-  ed.focus();
+export function setZoom(percent) {
+  const tab = activeTab();
+  if (tab) tab.zoom = percent;
+  document.documentElement.style.setProperty("--zoom", String(percent));
+  const seg = document.getElementById("st-zoom");
+  if (seg) seg.textContent = `${percent}%`;
 }
+
+export function getZoom() {
+  const tab = activeTab();
+  return tab ? tab.zoom : 100;
+}
+
+// ===== 编辑原语（FR-3 / FR-7.4 源码模式）=====
 
 export function markDirty() {
   const tab = activeTab();
   if (tab && !tab.dirty) {
     tab.dirty = true;
-    window.dispatchEvent(new CustomEvent("tab-updated", { detail: tab.id }));
+    window.dispatchEvent(new CustomEvent("tabs-refresh"));
+  }
+  const ed = document.getElementById("editor");
+  if (tab) document.title = `${tab.title}${tab.dirty ? " *" : ""} - HiEditor`;
+  scheduleSessionSave();
+  updateStatus();
+}
+
+export function replaceSelection(before, after, placeholder = "") {
+  const view = cm.view;
+  const { from, to } = view.state.selection.main;
+  const selected = view.state.sliceDoc(from, to);
+  const inner = selected || placeholder;
+  const insert = before + inner + after;
+  view.dispatch({
+    changes: { from, to, insert },
+    selection: { anchor: from + before.length, head: from + before.length + inner.length },
+    scrollIntoView: true,
+  });
+  view.focus();
+  markDirty();
+}
+
+export function transformSelection(fn) {
+  const view = cm.view;
+  const { from, to } = view.state.selection.main;
+  const selected = view.state.sliceDoc(from, to);
+  view.dispatch({
+    changes: { from, to, insert: fn(selected) },
+    selection: { anchor: from, head: from + fn(selected).length },
+    scrollIntoView: true,
+  });
+  view.focus();
+  markDirty();
+}
+
+function dispatchLines(fn) {
+  const view = cm.view;
+  const { from, to } = view.state.selection.main;
+  const startLine = view.state.doc.lineAt(from);
+  const endLine = view.state.doc.lineAt(to);
+  const changes = [];
+  let pos = 0;
+  const newSelections = [];
+  for (let n = startLine.number; n <= endLine.number; n++) {
+    const line = view.state.doc.line(n);
+    const replaced = fn(line.text);
+    changes.push({ from: line.from, to: line.to, insert: replaced });
+    if (n === startLine.number) newSelections.push({ from: line.from, to: line.from + replaced.length });
+    pos = replaced.length;
+  }
+  view.dispatch({ changes, selection: { anchor: newSelections[0].from, head: newSelections[0].to }, scrollIntoView: true });
+  view.focus();
+  markDirty();
+}
+
+export function setHeading(level) {
+  const prefix = level === 0 ? "" : "#".repeat(level) + " ";
+  dispatchLines((line) => prefix + line.replace(/^#{1,6}\s*/, ""));
+}
+
+export function toggleLinePrefix(prefix) {
+  dispatchLines((line) => {
+    const stripped = line.replace(/^(\s*)([-*+] |\d+\. |- \[[ x]\] |> )/, "$1");
+    return stripped.startsWith(prefix) ? stripped : prefix + stripped;
+  });
+}
+
+export function toggleNumberedPrefix() {
+  const view = cm.view;
+  const { from, to } = view.state.selection.main;
+  const startLine = view.state.doc.lineAt(from);
+  const endLine = view.state.doc.lineAt(to);
+  const lines = [];
+  for (let n = startLine.number; n <= endLine.number; n++) {
+    lines.push(view.state.doc.line(n).text);
+  }
+  const allNumbered = lines.every((l) => /^\s*\d+\. /.test(l));
+  const out = lines
+    .map((l, i) => {
+      const stripped = l.replace(/^(\s*)(\d+\. |[-*+] |- \[[ x]\] )/, "$1");
+      return allNumbered ? stripped : stripped.replace(/^(\s*)/, `$1${i + 1}. `);
+    })
+    .join("\n");
+  view.dispatch({
+    changes: { from: startLine.from, to: endLine.to, insert: out },
+    selection: { anchor: startLine.from, head: startLine.from + out.length },
+    scrollIntoView: true,
+  });
+  view.focus();
+  markDirty();
+}
+
+export function insertBlock(text) {
+  const view = cm.view;
+  const s = view.state.selection.main.head;
+  const line = view.state.doc.lineAt(s);
+  const atLineStart = s === line.from;
+  const insert = (atLineStart ? "" : "\n") + text;
+  view.dispatch({
+    changes: { from: s, insert },
+    selection: { anchor: s + insert.length },
+    scrollIntoView: true,
+  });
+  view.focus();
+  markDirty();
+}
+
+// ===== 剪贴板（FR-3.2）=====
+
+export async function copySelection() {
+  const { from, to } = getSelectionRange();
+  const text = cm.view.state.sliceDoc(from, to);
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    /* WebView2 剪贴板写入一般直接可用 */
   }
 }
 
-export function editorStatsText() {
-  return editorEl().value;
+export async function cutSelection() {
+  await copySelection();
+  deleteSelection();
+  focusEditor();
+}
+
+export async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) {
+      cm.view.dispatch({
+        changes: { from: getSelectionRange().from, to: getSelectionRange().to, insert: text },
+        selection: { anchor: getSelectionRange().from + text.length },
+        scrollIntoView: true,
+      });
+      markDirty();
+      focusEditor();
+    }
+  } catch (e) {
+    // 读取被拒时提示用户用原生 Ctrl+V（CM6 原生支持）
+    const { showBanner } = await import("./ui.js");
+    showBanner({ message: "请在编辑区内按 Ctrl+V 粘贴。", info: true, autoHideMs: 2000 });
+  }
+}
+
+export function editorUndo() {
+  focusEditor();
+  if (cm) cmUndo(cm.view);
+}
+export function editorRedo() {
+  focusEditor();
+  if (cm) cmRedo(cm.view);
+}
+
+function isDarkTheme() {
+  return document.documentElement.dataset.theme === "dark";
 }
