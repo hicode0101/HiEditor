@@ -6,6 +6,8 @@ use std::path::Path;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct Settings {
+    // 外观
+    pub theme: String, // "light" | "dark"
     // 文本编辑
     pub font_size: u32,
     pub tab_width: u32,
@@ -29,6 +31,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            theme: "light".into(),
             font_size: 15,
             tab_width: 4,
             wrap_default: false,

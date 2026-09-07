@@ -166,7 +166,7 @@ function bindTablePicker(btn) {
       for (let c = 1; c <= 8; c++) {
         const cell = document.createElement("div");
         cell.style.cssText =
-          "width:20px;height:20px;border:1px solid var(--row-divider);border-radius:2px;background:#fff";
+          "width:20px;height:20px;border:1px solid var(--row-divider);border-radius:2px;background:var(--input-bg)";
         cell.dataset.rc = `${r},${c}`;
         cell.addEventListener("mouseenter", () => {
           rows = r;

@@ -1,12 +1,13 @@
 /* HiEditor 视觉基准（需求文档 3.1 色彩 token / 4.x 尺寸规格，浅色主题 + 深色标题栏） */
 
 :root {
-  --titlebar-bg: #202020;
-  --tab-inactive-bg: #2d2d2d;
+  /* 浅色模式：浅蓝标题栏（用户定制） */
+  --titlebar-bg: #cfe3f7;
+  --tab-inactive-bg: #bed8f0;
   --tab-active-bg: #f9f9f9;
-  --titlebar-text: rgba(255, 255, 255, 0.86);
+  --titlebar-text: #2a4a68;
   --titlebar-text-active: #1b1b1b;
-  --dark-hover: rgba(255, 255, 255, 0.10);
+  --dark-hover: rgba(0, 0, 0, 0.08);
   --caption-close-hover: #c42b1c;
   --row-bg: #f9f9f9;
   --row-divider: #e5e5e5;
@@ -17,9 +18,19 @@
   --light-pressed: #e0e0e0;
   --status-divider: #d9d9d9;
   --accent: #0067c0;
+  --on-accent: #ffffff;
   --selection-bg: #add6ff;
   --menu-bg: rgba(249, 249, 249, 0.95);
   --banner-warn-bg: #fff4ce;
+  --banner-info-bg: #f4f4f4;
+  --caret: #1b1b1b;
+  --scrollbar-thumb: #c5c5c5;
+  --scrollbar-thumb-hover: #a8a8a8;
+  --dialog-btn-bg: #fbfbfb;
+  --dialog-btn-border: #d1d1d1;
+  --input-bg: #ffffff;
+  --input-border: #d1d1d1;
+  --switch-bg: #c8c8c8;
 
   --editor-font-size: 15px;
   --editor-line-height: 22px;
@@ -29,6 +40,38 @@
     "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
   --mono-font: "Cascadia Mono", Consolas, "SF Mono", Menlo, "DejaVu Sans Mono",
     "Microsoft YaHei Mono", monospace;
+}
+
+/* 深色主题（设置 ▸ 外观 ▸ 主题 = 深色） */
+:root[data-theme="dark"] {
+  --titlebar-bg: #1c1c1c;
+  --tab-inactive-bg: #2a2a2a;
+  --tab-active-bg: #2b2b2b;
+  --titlebar-text: rgba(255, 255, 255, 0.78);
+  --titlebar-text-active: #f0f0f0;
+  --dark-hover: rgba(255, 255, 255, 0.08);
+  --row-bg: #2b2b2b;
+  --row-divider: #3f3f3f;
+  --content-bg: #1e1e1e;
+  --text-primary: #e8e8e8;
+  --text-secondary: #9d9d9d;
+  --light-hover: #363636;
+  --light-pressed: #3f3f3f;
+  --status-divider: #4d4d4d;
+  --accent: #4cc2ff;
+  --on-accent: #14232e;
+  --selection-bg: #294d6e;
+  --menu-bg: rgba(43, 43, 43, 0.95);
+  --banner-warn-bg: #433519;
+  --banner-info-bg: #323232;
+  --caret: #e8e8e8;
+  --scrollbar-thumb: #565656;
+  --scrollbar-thumb-hover: #7a7a7a;
+  --dialog-btn-bg: #333333;
+  --dialog-btn-border: #4d4d4d;
+  --input-bg: #1e1e1e;
+  --input-border: #4d4d4d;
+  --switch-bg: #5a5a5a;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -75,12 +118,24 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 }
 .app-icon svg { width: 16px; height: 16px; }
 
+.app-name {
+  display: flex;
+  align-items: center;
+  padding: 0 18px 0 2px;
+  color: var(--titlebar-text);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  flex: 0 0 auto;
+  user-select: none;
+}
+
 #tabs {
   display: flex;
   align-items: flex-end;
   gap: 4px;
   padding-top: 8px;
-  max-width: calc(100% - 190px);
+  max-width: calc(100% - 300px);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -127,7 +182,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .tab:not(.active):hover .tab-close { visibility: visible; }
 .tab:not(.active):hover .tab-close .dot-hidden { display: none; }
 .tab:hover .tab-close { background: var(--dark-hover); }
-.tab.active .tab-close:hover { background: #e0e0e0; }
+.tab.active .tab-close:hover { background: var(--light-pressed); }
 .tab .dirty-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
@@ -253,7 +308,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   outline: none;
   background: var(--content-bg);
   color: var(--text-primary);
-  caret-color: var(--caret, #1b1b1b);
+  caret-color: var(--caret);
   font-family: var(--mono-font);
   font-size: calc(var(--editor-font-size) * var(--zoom) / 100);
   line-height: calc(var(--editor-line-height) * var(--zoom) / 100);
@@ -266,8 +321,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 #editor::selection { background: var(--selection-bg); }
 
 #editor::-webkit-scrollbar { width: 12px; height: 12px; }
-#editor::-webkit-scrollbar-thumb { background: #c5c5c5; border-radius: 6px; border: 3px solid var(--content-bg); }
-#editor::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+#editor::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 6px; border: 3px solid var(--content-bg); }
+#editor::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 #editor::-webkit-scrollbar-corner { background: transparent; }
 
 /* 设置页（UI-5.8） */
@@ -335,9 +390,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .settings-item select, .settings-item input[type="number"] {
   height: 32px;
   min-width: 140px;
-  border: 1px solid #d1d1d1;
+  border: 1px solid var(--input-border);
   border-radius: 4px;
-  background: #fff;
+  background: var(--input-bg);
+  color: var(--text-primary);
   padding: 0 8px;
   font-family: inherit;
   font-size: 14px;
@@ -345,7 +401,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .settings-switch {
   width: 40px; height: 20px;
   border-radius: 10px;
-  background: #c8c8c8;
+  background: var(--switch-bg);
   position: relative;
   transition: background 0.15s;
   flex: 0 0 40px;
@@ -461,11 +517,12 @@ button.st-seg:active { background: var(--light-pressed); }
   min-width: 90px;
   height: 32px;
   border-radius: 4px;
-  border: 1px solid #d1d1d1;
-  background: #fbfbfb;
+  border: 1px solid var(--dialog-btn-border);
+  background: var(--dialog-btn-bg);
+  color: var(--text-primary);
 }
 .dialog .dlg-btn:hover { background: var(--light-hover); }
-.dialog .dlg-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.dialog .dlg-btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .dialog .dlg-btn.primary:hover { filter: brightness(1.1); }
 
 /* 横幅（FR-14） */
@@ -479,14 +536,14 @@ button.st-seg:active { background: var(--light-pressed); }
   background: var(--banner-warn-bg);
   border-bottom: 1px solid var(--row-divider);
 }
-.banner.info { background: #f4f4f4; }
+.banner.info { background: var(--banner-info-bg); }
 .banner .bn-text { flex: 1; }
 .banner .bn-btn {
   height: 26px;
   padding: 0 10px;
   border-radius: 4px;
-  border: 1px solid #d1d1d1;
-  background: #fff;
+  border: 1px solid var(--dialog-btn-border);
+  background: var(--dialog-btn-bg);
   font-size: 12px;
 }
 .banner .bn-btn:hover { background: var(--light-hover); }

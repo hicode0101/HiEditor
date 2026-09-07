@@ -3,10 +3,12 @@
 import { state } from "./state.js";
 import { showDialog } from "./ui.js";
 import { ICONS } from "./icons.js";
+import { applyTheme } from "./theme.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
 const CATEGORIES = [
+  { id: "appearance", label: "外观" },
   { id: "editor", label: "文本编辑" },
   { id: "file", label: "文件" },
   { id: "markdown", label: "Markdown" },
@@ -135,6 +137,23 @@ function persist() {
 function renderSettingsItems(panel, category) {
   const s = state.settings;
   const map = {
+    appearance: [
+      item(
+        { label: "主题风格", desc: "浅色 / 深色模式，切换后立即生效并记住" },
+        selectControl(
+          s.theme || "light",
+          [
+            ["light", "浅色模式"],
+            ["dark", "深色模式"],
+          ],
+          (v) => {
+            s.theme = v;
+            persist();
+            applyTheme(v);
+          }
+        )
+      ),
+    ],
     editor: [
       item({ label: "字号", desc: "8 – 72" }, numberControl(s.font_size, 8, 72, (v) => { s.font_size = v; persist(); })),
       item({ label: "格式化缩进（JSON/XML）", desc: "0 表示 Tab" }, numberControl(s.format_indent, 0, 8, (v) => { s.format_indent = v; persist(); })),

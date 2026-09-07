@@ -9,6 +9,7 @@ import { openSettings, closeSettings } from "./settings.js";
 import { newTab, switchTab, openPath, saveActive, saveActiveAs, saveAll, closeTab } from "./files.js";
 import { setZoom, setWrap, updateStatus, editorEl } from "./editor.js";
 import { setIcon } from "./icons.js";
+import { applyTheme } from "./theme.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -26,6 +27,7 @@ async function boot() {
 
   state.registry = await invoke("get_registry");
   state.settings = await invoke("get_settings");
+  applyTheme(state.settings.theme || "light");
   document.documentElement.style.setProperty(
     "--editor-font-size",
     `${state.settings.font_size || 15}px`
