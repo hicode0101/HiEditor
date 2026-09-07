@@ -240,6 +240,37 @@ fn set_plugin_enabled(host: State<HostCell>, plugin_id: String, enabled: bool) -
         .map_err(|e| format!("写入 config.json 失败：{e}"))
 }
 
+/// 用系统默认浏览器打开链接（关于页"开源地址"，跨平台）。
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    // 白名单校验，防止经 start/xdg-open 注入参数。
+    if !url.starts_with("https://") || url.chars().any(|c| c.is_whitespace() || c == '"') {
+        return Err("非法的 URL".into());
+    }
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd")
+            .args(["/c", "start", "", &url])
+            .spawn()
+            .map_err(|e| format!("打开失败：{e}"))?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("打开失败：{e}"))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("打开失败：{e}"))?;
+    }
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -256,7 +287,8 @@ fn main() {
             format_text,
             get_settings,
             save_settings,
-            set_plugin_enabled
+            set_plugin_enabled,
+            open_url
         ])
         .run(tauri::generate_context!())
         .expect("HiEditor 启动失败");

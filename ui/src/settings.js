@@ -176,6 +176,7 @@ function renderSettingsItems(panel, category) {
     info.textContent = "HiEditor 0.1.0 — 跨平台轻量文本 / Markdown 编辑器";
     panel.appendChild(info);
   }
+  if (category === "about") renderAbout(panel);
 }
 
 async function renderPlugins(panel) {
@@ -224,4 +225,51 @@ async function renderPlugins(panel) {
     )
   );
   panel.appendChild(rows);
+}
+
+// ===== 关于页扩展信息（开源地址 / 作者微信） =====
+
+const ABOUT = {
+  repo: "https://github.com/hicode0101/HiEditor",
+  wechatId: "hicode0101",
+  wechatDisplay: "hicode0101（犀利的远哥）",
+};
+
+function miniBtn(label, action) {
+  const b = document.createElement("button");
+  b.className = "link-btn";
+  b.textContent = label;
+  b.addEventListener("click", action);
+  return b;
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const { showBanner } = await import("./ui.js");
+    showBanner({ message: "已复制到剪贴板", info: true, autoHideMs: 1500 });
+  } catch (e) {
+    showDialog({ title: "复制失败", body: String(e) });
+  }
+}
+
+function renderAbout(panel) {
+  const repoActions = document.createElement("span");
+  repoActions.style.cssText = "display:flex;gap:8px";
+  repoActions.append(
+    miniBtn("打开", () =>
+      invoke("open_url", { url: ABOUT.repo }).catch((e) =>
+        showDialog({ title: "打开失败", body: String(e) })
+      )
+    ),
+    miniBtn("复制", () => copyText(ABOUT.repo))
+  );
+  panel.appendChild(item({ label: "开源地址", desc: ABOUT.repo }, repoActions));
+
+  panel.appendChild(
+    item(
+      { label: "作者微信", desc: ABOUT.wechatDisplay },
+      miniBtn("复制微信号", () => copyText(ABOUT.wechatId))
+    )
+  );
 }
