@@ -16,7 +16,7 @@ const CATEGORIES = [
   { id: "about", label: "关于" },
 ];
 
-let current = "editor";
+let current = "appearance"; // 每次进设置的默认分类（外观 = 主题风格）
 
 export async function openSettings() {
   state.settingsOpen = true;
