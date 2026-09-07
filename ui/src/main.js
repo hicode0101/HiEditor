@@ -42,7 +42,52 @@ async function boot() {
 
   bindGlobalKeys();
   bindEditorEvents();
+  await initDragDrop();
   syncCaptionGlyph();
+}
+
+// 拖放打开文件（FR-12.1）：WebView 拦截系统拖放，必须订阅 Tauri 原生事件才能拿到绝对路径。
+async function initDragDrop() {
+  const overlay = document.createElement("div");
+  overlay.id = "drop-overlay";
+  overlay.textContent = "松开以在 HiEditor 中打开";
+  overlay.hidden = true;
+  document.body.appendChild(overlay);
+
+  const openPaths = async (paths) => {
+    for (const path of paths || []) {
+      if (path) await openPath(path);
+    }
+  };
+
+  if (!window.__TAURI__) return;
+  try {
+    // Tauri 2：onDragDropEvent（enter/over/drop/leave）
+    const webview = window.__TAURI__.webview.getCurrentWebview();
+    await webview.onDragDropEvent((event) => {
+      const p = event.payload || {};
+      if (p.type === "enter" || p.type === "over") {
+        overlay.hidden = false;
+      } else if (p.type === "leave") {
+        overlay.hidden = true;
+      } else if (p.type === "drop") {
+        overlay.hidden = true;
+        openPaths(p.paths);
+      }
+    });
+    return;
+  } catch (e) {
+    // 旧运行时回退：按事件名订阅
+  }
+  if (window.__TAURI__.event) {
+    const { listen } = window.__TAURI__.event;
+    await listen("tauri://drag-drop", (e) => {
+      overlay.hidden = true;
+      openPaths(e.payload && e.payload.paths);
+    });
+    await listen("tauri://drag-enter", () => (overlay.hidden = false));
+    await listen("tauri://drag-leave", () => (overlay.hidden = true));
+  }
 }
 
 function switchToolbar() {
@@ -165,14 +210,6 @@ function bindEditorEvents() {
       const tab = activeTab();
       if (tab) { tab.dirty = true; }
       updateStatus();
-    }
-  });
-  // 拖放打开文件（FR-12.1）
-  window.addEventListener("dragover", (e) => e.preventDefault());
-  window.addEventListener("drop", (e) => {
-    e.preventDefault();
-    for (const file of e.dataTransfer.files) {
-      if (file.path) openPath(file.path);
     }
   });
   // 打开文件后刷新
