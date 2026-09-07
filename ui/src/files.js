@@ -31,6 +31,13 @@ export async function saveDialog(defaultName) {
   });
 }
 
+// 未保存过的新文件默认名：<当前日期_小时分钟>.txt（如 2026-09-07_2230.txt）
+export function timestampTxtName() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.txt`;
+}
+
 export async function openPath(path, { activate = true } = {}) {
   // 同文件已打开 → 定位到已有标签（FR-2.2）
   const norm = path.replace(/\\/g, "/").toLowerCase();
@@ -84,7 +91,8 @@ export async function saveTab(tab, { as = false } = {}) {
   persistActiveFromEditor();
   let path = tab.path;
   if (!path || as) {
-    path = await saveDialog(tab.title);
+    // 未保存过的新文件：默认名 = <当前日期_小时分钟>.txt（FR-2.4 v1.5）；已有文件沿用当前文件名
+    path = await saveDialog(tab.path ? tab.title : timestampTxtName());
     if (!path) return false;
   }
   await invoke("save_file", {
