@@ -2,8 +2,8 @@
 
 import { state, activeTab } from "./state.js";
 import { ICONS, setIcon } from "./icons.js";
-import { closeFlyout, bindTooltip } from "./ui.js";
-import { newTab, switchTab, closeTab } from "./files.js";
+import { openMenu, closeFlyout, bindTooltip } from "./ui.js";
+import { newTab, switchTab, closeTab, saveTab } from "./files.js";
 
 export function initTitlebar() {
   const appIcon = document.querySelector(".app-icon");
@@ -31,11 +31,7 @@ export function initTitlebar() {
   });
 
   window.addEventListener("tabs-refresh", renderTabs);
-  window.addEventListener("tab-updated", (e) => {
-    const id = e.detail;
-    const el = document.querySelector(`.tab[data-id="${id}"]`);
-    if (el) updateTabEl(el, state.tabs.find((t) => t.id === id));
-  });
+  window.addEventListener("tab-updated", renderTabs);
   window.addEventListener("tab-switched", renderTabs);
 }
 
@@ -70,14 +66,6 @@ function renderTabs() {
   }
 }
 
-function updateTabEl(el, tab) {
-  if (!el || !tab) return;
-  const wasActive = el.classList.contains("active");
-  el.innerHTML = "";
-  buildTabContent(el, tab);
-  el.classList.toggle("active", wasActive);
-}
-
 function buildTabContent(el, tab) {
   if (tab.dirty && tab.id !== state.activeId) {
     const dot = document.createElement("span");
@@ -97,6 +85,13 @@ function buildTabContent(el, tab) {
   });
   el.appendChild(close);
   el.addEventListener("click", () => switchTab(tab.id));
+  // 标签右键菜单（FR-1.5 v1.5：关闭选项卡 / 关闭其它选项卡 / 保存 / 另存为）
+  el.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!state.tabs.some((t) => t.id === tab.id)) return;
+    openMenu(el, tabMenuItems(tab.id), { x: e.clientX, y: e.clientY });
+  });
   el.addEventListener("mousedown", (e) => {
     if (e.button === 1) {
       e.preventDefault();
@@ -122,6 +117,30 @@ function buildTabContent(el, tab) {
     state.tabs.splice(to, 0, moved);
     window.dispatchEvent(new CustomEvent("tabs-refresh"));
   });
+}
+
+// 标签右键菜单项（作用于被右键的标签，FR-1.5）
+function tabMenuItems(tabId) {
+  const tab = state.tabs.find((t) => t.id === tabId);
+  if (!tab) return [];
+  const others = state.tabs.filter((t) => t.id !== tabId);
+  return [
+    { label: "关闭选项卡", action: () => closeTab(tabId) },
+    {
+      label: "关闭其它选项卡",
+      disabled: others.length === 0,
+      action: async () => {
+        for (const t of [...others]) await closeTab(t.id);
+      },
+    },
+    { sep: true },
+    {
+      label: "保存",
+      disabled: !tab.dirty && !!tab.path,
+      action: () => saveTab(tab),
+    },
+    { label: "另存为", action: () => saveTab(tab, { as: true }) },
+  ];
 }
 
 export function syncCaptionGlyph() {

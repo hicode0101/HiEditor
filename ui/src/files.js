@@ -97,6 +97,8 @@ export async function saveTab(tab, { as = false } = {}) {
   tab.title = basename(path);
   tab.dirty = false;
   addRecent(path);
+  document.title = `${tab.title} - HiEditor`;
+  addRecent(path);
   if (!tab.lang || tab.lang === "plaintext") tab.lang = langForPath(path);
   refreshTabs();
   window.dispatchEvent(new CustomEvent("tab-updated", { detail: tab.id }));

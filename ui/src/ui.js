@@ -51,8 +51,9 @@ function buildItem(item) {
 
 /**
  * 在锚点元素下打开下拉菜单。items: {label, shortcut, action, disabled(), checked(), sep, submenu:[...]}
+ * opts: { align, x, y } —— 传 x/y 时按指定坐标弹出（用于右键上下文菜单）。
  */
-export function openMenu(anchor, items, { align = "left" } = {}) {
+export function openMenu(anchor, items, { align = "left", x = null, y = null } = {}) {
   const same = openAnchor === anchor;
   closeFlyout();
   if (same) return; // 再点同一锚点 = 收起
@@ -87,13 +88,13 @@ export function openMenu(anchor, items, { align = "left" } = {}) {
 
   const rect = anchor.getBoundingClientRect();
   const fw = flyout.offsetWidth;
-  let x = align === "right" ? rect.right - fw : rect.left;
-  x = Math.max(4, Math.min(x, window.innerWidth - fw - 4));
-  let y = rect.bottom + 2;
+  let px = x === null ? (align === "right" ? rect.right - fw : rect.left) : x;
+  px = Math.max(4, Math.min(px, window.innerWidth - fw - 4));
+  let py = y === null ? rect.bottom + 2 : y;
   const fh = flyout.offsetHeight;
-  if (y + fh > window.innerHeight - 4) y = Math.max(4, rect.top - fh - 2);
-  flyout.style.left = x + "px";
-  flyout.style.top = y + "px";
+  if (py + fh > window.innerHeight - 4) py = Math.max(4, py - fh - 4);
+  flyout.style.left = px + "px";
+  flyout.style.top = py + "px";
 
   openFlyout = flyout;
   openAnchor = anchor;
