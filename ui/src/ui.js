@@ -63,19 +63,30 @@ export function openMenu(anchor, items, { align = "left", x = null, y = null } =
   let yShift = 0;
   for (const item of items) {
     if (item.submenu) {
+      // 子菜单：嵌套在父项内，点击展开（父菜单保留）
       const holder = document.createElement("div");
       holder.style.position = "relative";
-      const parentBtn = buildItem({
-        ...item,
-        action: () => {
-          const sub = document.createElement("div");
-          sub.className = "menu-flyout";
-          for (const child of item.submenu) sub.appendChild(buildItem(child));
-          const rect = holder.getBoundingClientRect();
-          sub.style.left = rect.right - 4 + "px";
-          sub.style.top = rect.top + "px";
-          layer().appendChild(sub);
-        },
+      const parentBtn = document.createElement("button");
+      parentBtn.className = "menu-item" + (item.disabled ? "" : "");
+      if (item.disabled) parentBtn.disabled = true;
+      const lbl = document.createElement("span");
+      lbl.className = "mi-label";
+      lbl.textContent = item.label;
+      const arrow = document.createElement("span");
+      arrow.className = "mi-shortcut";
+      arrow.textContent = "›";
+      parentBtn.append(lbl, arrow);
+      parentBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const existing = holder.querySelector(":scope > .menu-flyout");
+        if (existing) { existing.remove(); return; }
+        const sub = document.createElement("div");
+        sub.className = "menu-flyout";
+        sub.style.position = "absolute";
+        sub.style.left = "calc(100% - 6px)";
+        sub.style.top = "0";
+        for (const child of item.submenu) sub.appendChild(buildItem(child));
+        holder.appendChild(sub);
       });
       holder.appendChild(parentBtn);
       flyout.appendChild(holder);

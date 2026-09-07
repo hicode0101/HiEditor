@@ -160,3 +160,35 @@ export function initMenus() {
     });
   });
 }
+
+// ===== 编辑区右键菜单（FR-15.1）：格式化项按当前语言自动启用/禁用 =====
+
+export function initEditorContextMenu() {
+  const host = document.getElementById("editor");
+  host.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const tab = activeTab();
+    const { from, to } = getSelectionRange();
+    const hasSel = tab && from !== to;
+    const fmts = tab ? formattersFor(tab.lang) : [];
+    const items = [
+      { label: "剪切", shortcut: "Ctrl+X", disabled: !hasSel, action: cutSelection },
+      { label: "复制", shortcut: "Ctrl+C", disabled: !hasSel, action: copySelection },
+      { label: "粘贴", shortcut: "Ctrl+V", action: pasteFromClipboard },
+      { sep: true },
+      { label: "全选", shortcut: "Ctrl+A", action: selectAll },
+      { sep: true },
+      {
+        label: "格式化",
+        disabled: fmts.length === 0,
+        submenu: fmts.map((f) => ({
+          label: f.label,
+          shortcut: f.shortcut || undefined,
+          action: () => runFormatter(f),
+        })),
+      },
+    ];
+    openMenu(host, items, { x: e.clientX, y: e.clientY });
+  });
+}

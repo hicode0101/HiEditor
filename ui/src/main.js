@@ -2,11 +2,11 @@
 
 import { state, activeTab, newTabModel, langForPath } from "./state.js";
 import { initTitlebar, syncCaptionGlyph } from "./titlebar.js";
-import { initMenus } from "./menus.js";
+import { initMenus, initEditorContextMenu } from "./menus.js";
 import { initToolbars } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
-import { newTab, switchTab, openPath, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
+import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
 import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance } from "./editor.js";
 import { setIcon } from "./icons.js";
 import { applyTheme } from "./theme.js";
@@ -25,6 +25,7 @@ async function boot() {
   initMenus();
   initToolbars();
   initStatusbar();
+  initEditorContextMenu();
 
   state.registry = await invoke("get_registry");
   state.settings = await invoke("get_settings");

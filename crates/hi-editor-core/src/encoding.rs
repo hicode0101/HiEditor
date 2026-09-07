@@ -22,7 +22,11 @@ impl Encoding {
             Encoding::Utf8Bom => "utf8-bom".into(),
             Encoding::Utf16Le => "utf16le".into(),
             Encoding::Utf16Be => "utf16be".into(),
-            Encoding::Ansi(label) => format!("ansi:{label}"),
+            // 常用中文编码给独立键，其余 ANSI 代码页走 ansi: 前缀
+            Encoding::Ansi(label) => match label.as_str() {
+                "gbk" | "gb18030" => label.clone(),
+                other => format!("ansi:{other}"),
+            },
         }
     }
 
@@ -32,7 +36,11 @@ impl Encoding {
             Encoding::Utf8Bom => "UTF-8 (BOM)".into(),
             Encoding::Utf16Le => "UTF-16 LE".into(),
             Encoding::Utf16Be => "UTF-16 BE".into(),
-            Encoding::Ansi(label) => format!("ANSI ({})", label.to_uppercase()),
+            Encoding::Ansi(label) => match label.as_str() {
+                "gbk" => "GBK".into(),
+                "gb18030" => "GB18030".into(),
+                other => format!("ANSI ({})", other.to_uppercase()),
+            },
         }
     }
 
@@ -43,6 +51,8 @@ impl Encoding {
             "utf8-bom" => Some(Encoding::Utf8Bom),
             "utf16le" => Some(Encoding::Utf16Le),
             "utf16be" => Some(Encoding::Utf16Be),
+            "gbk" => Some(Encoding::Ansi("gbk".into())),
+            "gb18030" => Some(Encoding::Ansi("gb18030".into())),
             other => other
                 .strip_prefix("ansi:")
                 .map(|label| Encoding::Ansi(label.to_string())),
@@ -64,6 +74,8 @@ pub const ALL_CHOICES: &[(&str, &str)] = &[
     ("utf8-bom", "UTF-8 (BOM)"),
     ("utf16le", "UTF-16 LE"),
     ("utf16be", "UTF-16 BE"),
+    ("gbk", "GBK"),
+    ("gb18030", "GB18030"),
 ];
 
 /// BOM → 严格 UTF-8 → chardetng。
@@ -174,13 +186,16 @@ mod tests {
 
     #[test]
     fn key_roundtrip() {
-        for key in ["utf8", "utf8-bom", "utf16le", "utf16be", "ansi:gb18030"] {
+        for key in ["utf8", "utf8-bom", "utf16le", "utf16be", "gbk", "gb18030"] {
             let enc = Encoding::from_key(key).unwrap();
             assert_eq!(enc.key(), key);
         }
+        // 旧 ansi: 前缀键兼容解析，并归一化为独立键
+        assert_eq!(Encoding::from_key("ansi:gb18030").unwrap().key(), "gb18030");
         assert_eq!(
             Encoding::from_key("utf8-bom").unwrap().label(),
             "UTF-8 (BOM)"
         );
+        assert_eq!(Encoding::from_key("gbk").unwrap().label(), "GBK");
     }
 }
