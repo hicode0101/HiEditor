@@ -8,4 +8,4 @@ fn run(cmd: &str, _text: &str, _opts: &str) -> Result<String, String> {
     Err(format!("markdown 插件不提供原生命令：{cmd}"))
 }
 
-hi_export_plugin!("com.hieditor.markdown", "1.0.0", run);
+hi_export_plugin!("hieditor.markdown", "1.0.0", run);

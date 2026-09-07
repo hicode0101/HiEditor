@@ -1050,7 +1050,7 @@ plugins/
 
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
-| `id` | string | 是 | 全局唯一标识（建议反向域名，如 `com.hieditor.json`） |
+| `id` | string | 是 | 全局唯一标识（建议反向域名，如 `hieditor.json`） |
 | `name` | string | 是 | 插件显示名称（zh-CN） |
 | `version` | string | 是 | 插件版本（semver） |
 | `apiVersion` | string | 是 | 目标宿主插件 API 大版本；与宿主不符则拒绝加载 |
@@ -1069,7 +1069,7 @@ plugins/
 
 ```json
 {
-  "id": "com.hieditor.json",
+  "id": "hieditor.json",
   "name": "JSON 支持",
   "version": "1.0.0",
   "apiVersion": "1",

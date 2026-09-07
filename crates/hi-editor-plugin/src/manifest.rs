@@ -131,7 +131,7 @@ mod tests {
     use super::*;
 
     const SAMPLE: &str = r#"{
-        "id": "com.hieditor.json",
+        "id": "hieditor.json",
         "name": "JSON 支持",
         "version": "1.0.0",
         "apiVersion": 1,
@@ -147,7 +147,7 @@ mod tests {
     #[test]
     fn parses_sample_manifest() {
         let m = Manifest::parse(SAMPLE).unwrap();
-        assert_eq!(m.id, "com.hieditor.json");
+        assert_eq!(m.id, "hieditor.json");
         assert!(m.enabled);
         assert_eq!(m.platform_entry().unwrap(), "bin/hieditor_json.dll");
         assert_eq!(m.entry_file_name().unwrap(), "hieditor_json.dll");

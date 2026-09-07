@@ -181,7 +181,7 @@ fn serde_like_indent(opts: &str) -> String {
     " ".repeat(4)
 }
 
-hi_export_plugin!("com.hieditor.xml", "1.0.0", run);
+hi_export_plugin!("hieditor.xml", "1.0.0", run);
 
 #[cfg(test)]
 mod tests {

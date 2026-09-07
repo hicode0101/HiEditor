@@ -121,7 +121,7 @@ fn run(cmd: &str, text: &str, opts: &str) -> Result<String, String> {
     }
 }
 
-hi_export_plugin!("com.hieditor.json", "1.0.0", run);
+hi_export_plugin!("hieditor.json", "1.0.0", run);
 
 #[cfg(test)]
 mod tests {
