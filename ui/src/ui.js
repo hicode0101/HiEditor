@@ -144,7 +144,7 @@ let dialogEl = null;
 /**
  * showDialog({ title, body, buttons: [{label, primary, value}] }) -> Promise<value|null>
  */
-export function showDialog({ title, body = "", buttons = [{ label: "确定", primary: true, value: true }] }) {
+export function showDialog({ title, body = "", buttons = [{ label: "OK", primary: true, value: true }] }) {
   closeDialog();
   return new Promise((resolve) => {
     const backdrop = document.createElement("div");

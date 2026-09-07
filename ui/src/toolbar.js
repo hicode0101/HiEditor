@@ -2,6 +2,7 @@
 
 import { activeTab } from "./state.js";
 import { openPopover } from "./ui.js";
+import { t } from "./i18n.js";
 import {
   replaceSelection, setHeading, toggleLinePrefix, toggleNumberedPrefix,
   insertBlock, markDirty, transformSelection,
@@ -23,11 +24,11 @@ export function initToolbars() {
   bindTablePicker(md("table"));
   bindMoreDropdown(md("more"));
 
-  md("bold").addEventListener("click", () => replaceSelection("**", "**", "粗体文本"));
-  md("italic").addEventListener("click", () => replaceSelection("*", "*", "斜体文本"));
-  md("underline").addEventListener("click", () => replaceSelection("<u>", "</u>", "下划线文本"));
-  md("strike").addEventListener("click", () => replaceSelection("~~", "~~", "删除线文本"));
-  md("code").addEventListener("click", () => replaceSelection("`", "`", "代码"));
+  md("bold").addEventListener("click", () => replaceSelection("**", "**", t("toolbar.ph.bold")));
+  md("italic").addEventListener("click", () => replaceSelection("*", "*", t("toolbar.ph.italic")));
+  md("underline").addEventListener("click", () => replaceSelection("<u>", "</u>", t("toolbar.ph.underline")));
+  md("strike").addEventListener("click", () => replaceSelection("~~", "~~", t("toolbar.ph.strike")));
+  md("code").addEventListener("click", () => replaceSelection("`", "`", t("toolbar.ph.code")));
   md("clear").addEventListener("click", clearFormatting);
   md("hr").addEventListener("click", () => insertBlock("\n---\n"));
   md("quote").addEventListener("click", () => toggleLinePrefix("> "));
@@ -36,7 +37,7 @@ export function initToolbars() {
   md("task").addEventListener("click", () => toggleLinePrefix("- [ ] "));
   md("task-done").addEventListener("click", () => toggleLinePrefix("- [x] "));
   md("link").addEventListener("click", insertLink);
-  md("image").addEventListener("click", () => replaceSelection("![", "](https://)", "描述文本"));
+  md("image").addEventListener("click", () => replaceSelection("![", "](https://)", t("toolbar.ph.desc")));
   md("codeblock").addEventListener("click", () => insertBlock("\n```text\n\n```\n"));
   md("formula").addEventListener("click", () => insertBlock("\n$$\nE = mc^2\n$$\n"));
   md("help").addEventListener("click", showMarkdownHelp);
@@ -54,18 +55,18 @@ function clearFormatting() {
 }
 
 function insertLink() {
-  replaceSelection("[", "](https://)", "链接文本");
+  replaceSelection("[", "](https://)", t("toolbar.ph.link"));
 }
 
-const HEADINGS = [
-  { label: "正文", level: 0 },
+const headingItems = () => [
+  { label: t("status.plainText"), level: 0 },
   { sep: true },
-  { label: "标题 1", level: 1 },
-  { label: "标题 2", level: 2 },
-  { label: "标题 3", level: 3 },
-  { label: "标题 4", level: 4 },
-  { label: "标题 5", level: 5 },
-  { label: "标题 6", level: 6 },
+  { label: t("toolbar.heading1"), level: 1 },
+  { label: t("toolbar.heading2"), level: 2 },
+  { label: t("toolbar.heading3"), level: 3 },
+  { label: t("toolbar.heading4"), level: 4 },
+  { label: t("toolbar.heading5"), level: 5 },
+  { label: t("toolbar.heading6"), level: 6 },
 ];
 
 function bindHeadingDropdown(btn) {
@@ -73,7 +74,7 @@ function bindHeadingDropdown(btn) {
     const tab = activeTab();
     openMenu(
       btn,
-      HEADINGS.map((h) =>
+      headingItems().map((h) =>
         h.sep
           ? { sep: true }
           : {
@@ -89,8 +90,8 @@ function bindHeadingDropdown(btn) {
 function bindListDropdown(btn) {
   btn.addEventListener("click", () => {
     openMenu(btn, [
-      { label: "无序列表", action: () => toggleLinePrefix("- ") },
-      { label: "有序列表", action: () => toggleNumberedPrefix() },
+      { label: t("toolbar.ul"), action: () => toggleLinePrefix("- ") },
+      { label: t("toolbar.ol"), action: () => toggleNumberedPrefix() },
     ]);
   });
 }
@@ -98,11 +99,11 @@ function bindListDropdown(btn) {
 function bindMoreDropdown(btn) {
   btn.addEventListener("click", () => {
     openMenu(btn, [
-      { label: "脚注", disabled: true },
-      { label: "目录", disabled: true },
-      { label: "表情", disabled: true },
+      { label: t("md.footnote"), disabled: true },
+      { label: t("md.toc"), disabled: true },
+      { label: t("md.emoji"), disabled: true },
       { sep: true },
-      { label: "切换为源码模式", disabled: true }, // M2：WYSIWYG 接入后启用（FR-7.6）
+      { label: t("view.source"), disabled: true }, // M2：WYSIWYG 接入后启用（FR-7.6）
     ]);
   });
 }
@@ -118,7 +119,7 @@ const HELP_MD = [
 
 function showMarkdownHelp() {
   import("./ui.js").then(({ showDialog }) =>
-    showDialog({ title: "Markdown 语法速查", body: HELP_MD })
+    showDialog({ title: t("toolbar.help"), body: HELP_MD })
   );
 }
 
@@ -132,7 +133,7 @@ function bindTablePicker(btn) {
     const label = document.createElement("div");
     label.style.cssText =
       "text-align:center;margin-bottom:6px;color:var(--text-secondary);font-size:12px";
-    label.textContent = "1 行 × 1 列";
+    label.textContent = "1 × 1";
     const grid = document.createElement("div");
     grid.style.cssText = "display:grid;grid-template-columns:repeat(8,20px);gap:2px;";
     let rows = 0,
@@ -146,7 +147,7 @@ function bindTablePicker(btn) {
         cell.addEventListener("mouseenter", () => {
           rows = r;
           cols = c;
-          label.textContent = `${r} 行 × ${c} 列`;
+          label.textContent = `${r} × ${c}`;
           grid.querySelectorAll("div").forEach((d) => {
             const [dr, dc] = d.dataset.rc.split(",").map(Number);
             d.style.background = dr <= r && dc <= c ? "var(--accent)" : "#fff";
@@ -169,7 +170,7 @@ function bindTablePicker(btn) {
 
 function insertTable(rows, cols) {
   if (rows < 1 || cols < 1) return;
-  const header = "| " + Array.from({ length: cols }, (_, i) => `列${i + 1}`).join(" | ") + " |";
+  const header = "| " + Array.from({ length: cols }, (_, i) => `${i18n_t("toolbar.tableCol", { n: i + 1 })}`).join(" | ") + " |";
   const divider = "| " + Array.from({ length: cols }, () => "---").join(" | ") + " |";
   const body = Array.from({ length: rows - 1 }, () =>
     "|" + Array.from({ length: cols }, () => "  ").join("|") + "|"

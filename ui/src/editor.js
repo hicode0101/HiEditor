@@ -4,6 +4,7 @@
 
 import { state, activeTab } from "./state.js";
 import { scheduleSessionSave } from "./session.js";
+import { t } from "./i18n.js";
 import { undo as cmUndo, redo as cmRedo } from "/vendor/cm.js";
 
 let cm = null; // createEditor 返回的 API（view/setDoc/setLanguage/setDark/setWrap/focus）
@@ -97,9 +98,9 @@ export function updateStatus() {
   const doc = cm.view.state.doc;
   const head = cm.view.state.selection.main.head;
   const line = doc.lineAt(head);
-  document.getElementById("st-linecol").textContent = `行 ${line.number}, 列 ${head - line.from + 1}`;
+  document.getElementById("st-linecol").textContent = t("status.lineCol", { line: line.number, col: head - line.from + 1 });
   const chars = [...doc.toString()].length; // Unicode 码点计数（FR-3.8）
-  document.getElementById("st-chars").textContent = `${chars} 个字符`;
+  document.getElementById("st-chars").textContent = t("status.chars", { n: chars });
   document.getElementById("st-lang").textContent = langLabel(tab);
   document.getElementById("st-eol").textContent = eolLabel(tab.eol);
   document.getElementById("st-enc").textContent = encLabel(tab.encoding);
@@ -107,7 +108,7 @@ export function updateStatus() {
 
 function langLabel(tab) {
   const l = state.registry.languages.find((x) => x.id === tab.lang);
-  return l ? l.name : tab.lang === "plaintext" ? "纯文本" : tab.lang;
+  return l ? l.name : t("status.plainText");
 }
 function eolLabel(key) {
   const hit = state.registry.eols.find(([k]) => k === key);
@@ -298,7 +299,7 @@ export async function pasteFromClipboard() {
   } catch (e) {
     // 读取被拒时提示用户用原生 Ctrl+V（CM6 原生支持）
     const { showBanner } = await import("./ui.js");
-    showBanner({ message: "请在编辑区内按 Ctrl+V 粘贴。", info: true, autoHideMs: 2000 });
+    showBanner({ message: t("banner.pasteTip"), info: true, autoHideMs: 2000 });
   }
 }
 

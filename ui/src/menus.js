@@ -1,6 +1,7 @@
 // B 区菜单（第 6 章菜单树全量）：文件 / 编辑 / 查看，禁用条件实时计算
 
 import { state, activeTab, formattersFor } from "./state.js";
+import { t } from "./i18n.js";
 import { openMenu, showDialog, showBanner } from "./ui.js";
 import {
   focusEditor, getSelectionRange, replaceSelection, setHeading, isWrapOn,
@@ -17,12 +18,12 @@ function recentList() {
 
 function fileItems() {
   return [
-    { label: "新建标签页", shortcut: "Ctrl+N", action: newTab },
-    { label: "新建窗口", shortcut: "Ctrl+Shift+N", disabled: true }, // M2（FR-11 多窗口）
+    { label: t("file.newTab"), shortcut: "Ctrl+N", action: newTab },
+    { label: t("file.newWindow"), shortcut: "Ctrl+Shift+N", disabled: true }, // M2（FR-11 多窗口）
     { sep: true },
-    { label: "打开…", shortcut: "Ctrl+O", action: openFile },
+    { label: t("file.open"), shortcut: "Ctrl+O", action: openFile },
     {
-      label: "打开最近所用文件",
+      label: t("file.openRecent"),
       disabled: recentList().length === 0,
       submenu: [
         ...recentList().map((p) => ({
@@ -30,27 +31,27 @@ function fileItems() {
           action: async () => {
             const { openPath } = await import("./files.js");
             openPath(p).catch((e) =>
-              showDialog({ title: "打开失败", body: String(e) })
+              showDialog({ title: t("dialog.openError"), body: String(e) })
             );
           },
         })),
         { sep: true },
         {
-          label: "清除列表",
+          label: t("file.clearRecent"),
           action: () => localStorage.setItem("hi-recents", "[]"),
         },
       ],
     },
     { sep: true },
-    { label: "保存", shortcut: "Ctrl+S", action: saveActive },
-    { label: "另存为…", shortcut: "Ctrl+Shift+S", action: saveActiveAs },
-    { label: "全部保存", shortcut: "Ctrl+Alt+S", action: saveAll, disabled: !state.tabs.some((t) => t.dirty || !t.path) },
+    { label: t("file.save"), shortcut: "Ctrl+S", action: saveActive },
+    { label: t("file.saveAs"), shortcut: "Ctrl+Shift+S", action: saveActiveAs },
+    { label: t("file.saveAll"), shortcut: "Ctrl+Alt+S", action: saveAll, disabled: !state.tabs.some((t) => t.dirty || !t.path) },
     { sep: true },
-    { label: "打印…", shortcut: "Ctrl+P", action: printDocument },
+    { label: t("file.print"), shortcut: "Ctrl+P", action: printDocument },
     { sep: true },
-    { label: "关闭标签页", shortcut: "Ctrl+W", action: () => activeTab() && closeTab(activeTab().id) },
-    { label: "关闭窗口", shortcut: "Ctrl+Shift+W", action: () => window.__TAURI__.window.getCurrentWindow().close() },
-    { label: "退出", shortcut: "Alt+F4", action: () => window.__TAURI__.window.getCurrentWindow().close() },
+    { label: t("file.closeTab"), shortcut: "Ctrl+W", action: () => activeTab() && closeTab(activeTab().id) },
+    { label: t("file.closeWindow"), shortcut: "Ctrl+Shift+W", action: () => window.__TAURI__.window.getCurrentWindow().close() },
+    { label: t("file.exit"), shortcut: "Alt+F4", action: () => window.__TAURI__.window.getCurrentWindow().close() },
   ];
 }
 
@@ -76,27 +77,27 @@ function editItems() {
   const hasSel = tab && from !== to;
   const fmts = tab ? formattersFor(tab.lang) : [];
   return [
-    { label: "撤销", shortcut: "Ctrl+Z", action: editorUndo },
-    { label: "重做", shortcut: "Ctrl+Y", action: editorRedo },
+    { label: t("edit.undo"), shortcut: "Ctrl+Z", action: editorUndo },
+    { label: t("edit.redo"), shortcut: "Ctrl+Y", action: editorRedo },
     { sep: true },
-    { label: "剪切", shortcut: "Ctrl+X", disabled: !hasSel, action: cutSelection },
-    { label: "复制", shortcut: "Ctrl+C", disabled: !hasSel, action: copySelection },
-    { label: "粘贴", shortcut: "Ctrl+V", action: pasteFromClipboard },
-    { label: "删除", shortcut: "Del", disabled: !hasSel, action: deleteSelection },
+    { label: t("edit.cut"), shortcut: "Ctrl+X", disabled: !hasSel, action: cutSelection },
+    { label: t("edit.copy"), shortcut: "Ctrl+C", disabled: !hasSel, action: copySelection },
+    { label: t("edit.paste"), shortcut: "Ctrl+V", action: pasteFromClipboard },
+    { label: t("edit.delete"), shortcut: "Del", disabled: !hasSel, action: deleteSelection },
     { sep: true },
-    { label: "查找", shortcut: "Ctrl+F", disabled: true }, // M1（FR-4）
-    { label: "查找下一个", shortcut: "F3", disabled: true },
-    { label: "查找上一个", shortcut: "Shift+F3", disabled: true },
-    { label: "替换", shortcut: "Ctrl+H", disabled: true },
-    { label: "转到…", shortcut: "Ctrl+G", disabled: true },
+    { label: t("edit.find"), shortcut: "Ctrl+F", disabled: true }, // M1（FR-4）
+    { label: t("edit.findNext"), shortcut: "F3", disabled: true },
+    { label: t("edit.findPrev"), shortcut: "Shift+F3", disabled: true },
+    { label: t("edit.replace"), shortcut: "Ctrl+H", disabled: true },
+    { label: t("edit.goto"), shortcut: "Ctrl+G", disabled: true },
     { sep: true },
-    { label: "全选", shortcut: "Ctrl+A", action: selectAll },
-    { label: "时间/日期", shortcut: "F5", action: timeDate },
+    { label: t("edit.selectAll"), shortcut: "Ctrl+A", action: selectAll },
+    { label: t("edit.timeDate"), shortcut: "F5", action: timeDate },
     ...(fmts.length
       ? [
           { sep: true },
           ...fmts.map((f) => ({
-            label: f.label,
+            label: t(`fmt.${f.id}`) !== `fmt.${f.id}` ? t(`fmt.${f.id}`) : f.label,
             shortcut: f.shortcut || undefined,
             action: () => runFormatter(f),
           })),
@@ -110,26 +111,26 @@ function viewItems() {
   const isMd = tab && tab.lang === "markdown";
   return [
     {
-      label: "缩放",
+      label: t("view.zoomGroup"),
       submenu: [
-        { label: "放大", shortcut: "Ctrl+加号", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: 10 })) },
-        { label: "缩小", shortcut: "Ctrl+减号", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: -10 })) },
-        { label: "恢复默认缩放", shortcut: "Ctrl+0", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: 0 })) },
+        { label: t("view.zoomIn"), shortcut: "Ctrl+加号", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: 10 })) },
+        { label: t("view.zoomOut"), shortcut: "Ctrl+减号", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: -10 })) },
+        { label: t("view.zoomReset"), shortcut: "Ctrl+0", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: 0 })) },
       ],
     },
     { sep: true },
     {
-      label: "自动换行",
+      label: t("view.wordWrap"),
       shortcut: "Alt+Z",
       checked: isWrapOn(),
       action: () => window.dispatchEvent(new CustomEvent("toggle-wrap")),
     },
     {
-      label: "编辑模式",
+      label: t("view.editModeGroup"),
       disabled: !isMd,
       submenu: [
-        { label: "所见即所得", checked: isMd && tab.mode === "wysiwyg", disabled: !isMd, action: () => showWysiwygPending() },
-        { label: "源码", checked: !isMd || tab.mode === "source", disabled: !isMd, action: () => switchMdMode("source") },
+        { label: t("view.wysiwyg"), checked: isMd && tab.mode === "wysiwyg", disabled: !isMd, action: () => showWysiwygPending() },
+        { label: t("view.source"), checked: !isMd || tab.mode === "source", disabled: !isMd, action: () => switchMdMode("source") },
       ],
     },
   ];
@@ -173,14 +174,14 @@ export function initEditorContextMenu() {
     const hasSel = tab && from !== to;
     const fmts = tab ? formattersFor(tab.lang) : [];
     const items = [
-      { label: "剪切", shortcut: "Ctrl+X", disabled: !hasSel, action: cutSelection },
-      { label: "复制", shortcut: "Ctrl+C", disabled: !hasSel, action: copySelection },
-      { label: "粘贴", shortcut: "Ctrl+V", action: pasteFromClipboard },
+      { label: t("edit.cut"), shortcut: "Ctrl+X", disabled: !hasSel, action: cutSelection },
+      { label: t("edit.copy"), shortcut: "Ctrl+C", disabled: !hasSel, action: copySelection },
+      { label: t("edit.paste"), shortcut: "Ctrl+V", action: pasteFromClipboard },
       { sep: true },
-      { label: "全选", shortcut: "Ctrl+A", action: selectAll },
+      { label: t("edit.selectAll"), shortcut: "Ctrl+A", action: selectAll },
       { sep: true },
       {
-        label: "格式化",
+        label: t("edit.format"),
         disabled: fmts.length === 0,
         submenu: fmts.map((f) => ({
           label: f.label,

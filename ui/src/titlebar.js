@@ -3,6 +3,7 @@
 import { state, activeTab } from "./state.js";
 import { ICONS, setIcon } from "./icons.js";
 import { openMenu, closeFlyout, bindTooltip } from "./ui.js";
+import { t } from "./i18n.js";
 import { newTab, switchTab, closeTab, saveTab } from "./files.js";
 
 export function initTitlebar() {
@@ -46,12 +47,12 @@ async function toggleMaximize() {
 }
 
 function tabTitle(tab) {
-  return tab.title || "无标题";
+  return tab.title || t("tab.untitled");
 }
 
 function tabTooltip(tab) {
-  if (!tab.path) return `${tabTitle(tab)}（未保存）`;
-  return tab.dirty ? `${tab.path}（有未保存更改）` : tab.path;
+  if (!tab.path) return t("tab.tooltipUnsaved", { name: tabTitle(tab) });
+  return tab.dirty ? t("tab.tooltipDirty", { path: tab.path }) : tab.path;
 }
 
 function renderTabs() {
@@ -125,9 +126,9 @@ function tabMenuItems(tabId) {
   if (!tab) return [];
   const others = state.tabs.filter((t) => t.id !== tabId);
   return [
-    { label: "关闭选项卡", action: () => closeTab(tabId) },
+    { label: t("tab.menu.close"), action: () => closeTab(tabId) },
     {
-      label: "关闭其它选项卡",
+      label: t("tab.menu.closeOthers"),
       disabled: others.length === 0,
       action: async () => {
         for (const t of [...others]) await closeTab(t.id);
@@ -135,11 +136,11 @@ function tabMenuItems(tabId) {
     },
     { sep: true },
     {
-      label: "保存",
+      label: t("tab.menu.save"),
       disabled: !tab.dirty && !!tab.path,
       action: () => saveTab(tab),
     },
-    { label: "另存为", action: () => saveTab(tab, { as: true }) },
+    { label: t("tab.menu.saveAs"), action: () => saveTab(tab, { as: true }) },
   ];
 }
 

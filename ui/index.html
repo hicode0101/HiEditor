@@ -21,21 +21,21 @@
     <div class="app-icon" data-tauri-drag-region></div>
     <div class="app-name" data-tauri-drag-region>HiEditor</div>
     <div id="tabs" data-tauri-drag-region></div>
-    <button id="btn-new-tab" class="tb-icon-btn" title="新建标签页 (Ctrl+N)"></button>
+    <button id="btn-new-tab" class="tb-icon-btn" data-i18n-title="file.newTab"></button>
     <div class="tb-spacer" data-tauri-drag-region></div>
     <div class="caption">
-      <button id="cap-min" class="cap-btn" title="最小化"></button>
-      <button id="cap-max" class="cap-btn" title="最大化"></button>
-      <button id="cap-close" class="cap-btn cap-close" title="关闭"></button>
+      <button id="cap-min" class="cap-btn" data-i18n-title="caption.minimize"></button>
+      <button id="cap-max" class="cap-btn" data-i18n-title="caption.maximize"></button>
+      <button id="cap-close" class="cap-btn cap-close" data-i18n-title="caption.close"></button>
     </div>
   </header>
 
   <!-- B 区：菜单 / 工具行（40px，#f9f9f9） -->
   <nav id="row-b">
     <div class="menu-group">
-      <button class="menu-btn" data-menu="file">文件</button>
-      <button class="menu-btn" data-menu="edit">编辑</button>
-      <button class="menu-btn" data-menu="view">查看</button>
+      <button class="menu-btn" data-menu="file" data-i18n="menu.file">文件</button>
+      <button class="menu-btn" data-menu="edit" data-i18n="menu.edit">编辑</button>
+      <button class="menu-btn" data-menu="view" data-i18n="menu.view">查看</button>
     </div>
 
     <div class="toolbar-wrap">
@@ -52,40 +52,40 @@
       </div>
       <!-- Markdown 工具栏（WYSIWYG，基准截图二，UI-2.5） -->
       <div id="toolbar-markdown" class="toolbar" hidden>
-        <button class="tl-btn" data-md="bold" title="粗体 (Ctrl+B)"><span class="glyph bold">B</span></button>
-        <button class="tl-btn" data-md="italic" title="斜体 (Ctrl+I)"><span class="glyph italic">I</span></button>
-        <button class="tl-btn" data-md="underline" title="下划线 (Ctrl+U)"><span class="glyph underline">U</span></button>
-        <button class="tl-btn" data-md="strike" title="删除线 (Ctrl+Shift+X)"><span class="glyph strike">S</span></button>
-        <button class="tl-btn" data-md="clear" title="清除格式"><span class="tl-ico" data-ico="eraser"></span></button>
+        <button class="tl-btn" data-md="bold" data-i18n-title="toolbar.bold"><span class="glyph bold">B</span></button>
+        <button class="tl-btn" data-md="italic" data-i18n-title="toolbar.italic"><span class="glyph italic">I</span></button>
+        <button class="tl-btn" data-md="underline" data-i18n-title="toolbar.underline"><span class="glyph underline">U</span></button>
+        <button class="tl-btn" data-md="strike" data-i18n-title="toolbar.strike"><span class="glyph strike">S</span></button>
+        <button class="tl-btn" data-md="clear" data-i18n-title="toolbar.clearFormat"><span class="tl-ico" data-ico="eraser"></span></button>
         <span class="tl-sep"></span>
         <button class="tl-btn tl-wide" data-md="heading"><span class="h-label">H</span><span class="chev"></span></button>
-        <button class="tl-btn" data-md="hr" title="分隔线"><span class="tl-ico" data-ico="hr"></span></button>
-        <button class="tl-btn" data-md="quote" title="引用 (Ctrl+Shift+Q)"><span class="glyph quote">❝</span></button>
-        <button class="tl-btn" data-md="ul" title="无序列表 (Ctrl+Shift+8)"><span class="tl-ico" data-ico="list-bullet"></span></button>
-        <button class="tl-btn" data-md="ol" title="有序列表 (Ctrl+Shift+7)"><span class="tl-ico" data-ico="list-ol"></span></button>
-        <button class="tl-btn" data-md="task" title="任务列表 (Ctrl+Shift+9)"><span class="tl-ico" data-ico="task"></span></button>
-        <button class="tl-btn" data-md="task-done" title="已完成任务"><span class="tl-ico" data-ico="task-checked"></span></button>
+        <button class="tl-btn" data-md="hr" data-i18n-title="toolbar.hr"><span class="tl-ico" data-ico="hr"></span></button>
+        <button class="tl-btn" data-md="quote" data-i18n-title="toolbar.quote"><span class="glyph quote">❝</span></button>
+        <button class="tl-btn" data-md="ul" data-i18n-title="toolbar.ul"><span class="tl-ico" data-ico="list-bullet"></span></button>
+        <button class="tl-btn" data-md="ol" data-i18n-title="toolbar.ol"><span class="tl-ico" data-ico="list-ol"></span></button>
+        <button class="tl-btn" data-md="task" data-i18n-title="toolbar.task"><span class="tl-ico" data-ico="task"></span></button>
+        <button class="tl-btn" data-md="task-done" data-i18n-title="toolbar.taskDone"><span class="tl-ico" data-ico="task-checked"></span></button>
         <span class="tl-sep"></span>
-        <button class="tl-btn" data-md="link" title="链接 (Ctrl+K)"><span class="tl-ico" data-ico="link"></span></button>
-        <button class="tl-btn" data-md="image" title="图片 (Ctrl+Shift+I)"><span class="tl-ico" data-ico="image"></span></button>
-        <button class="tl-btn" data-md="code" title="行内代码"><span class="glyph code">&lt;/&gt;</span></button>
-        <button class="tl-btn" data-md="codeblock" title="代码块 (Ctrl+Shift+K)"><span class="tl-ico" data-ico="code-block"></span></button>
-        <button class="tl-btn" data-md="table" title="表格"><span class="tl-ico" data-ico="table"></span></button>
+        <button class="tl-btn" data-md="link" data-i18n-title="toolbar.link"><span class="tl-ico" data-ico="link"></span></button>
+        <button class="tl-btn" data-md="image" data-i18n-title="toolbar.image"><span class="tl-ico" data-ico="image"></span></button>
+        <button class="tl-btn" data-md="code" data-i18n-title="toolbar.codeInline"><span class="glyph code">&lt;/&gt;</span></button>
+        <button class="tl-btn" data-md="codeblock" data-i18n-title="toolbar.codeBlock"><span class="tl-ico" data-ico="code-block"></span></button>
+        <button class="tl-btn" data-md="table" data-i18n-title="toolbar.table"><span class="tl-ico" data-ico="table"></span></button>
         <span class="tl-sep"></span>
-        <button class="tl-btn" data-md="formula" title="数学公式"><span class="glyph sigma">Σ</span></button>
-        <button class="tl-btn" data-md="chem" title="化学公式" disabled><span class="tl-ico" data-ico="flask"></span></button>
-        <button class="tl-btn" data-md="mermaid" title="流程图" disabled><span class="tl-ico" data-ico="flowchart"></span></button>
-        <button class="tl-btn" data-md="timeline" title="时间线" disabled><span class="tl-ico" data-ico="timeline"></span></button>
-        <button class="tl-btn" data-md="attachment" title="附件" disabled><span class="tl-ico" data-ico="attachment"></span></button>
+        <button class="tl-btn" data-md="formula" data-i18n-title="toolbar.formula"><span class="glyph sigma">Σ</span></button>
+        <button class="tl-btn" data-md="chem" data-i18n-title="toolbar.chem" disabled><span class="tl-ico" data-ico="flask"></span></button>
+        <button class="tl-btn" data-md="mermaid" data-i18n-title="toolbar.mermaid" disabled><span class="tl-ico" data-ico="flowchart"></span></button>
+        <button class="tl-btn" data-md="timeline" data-i18n-title="toolbar.timeline" disabled><span class="tl-ico" data-ico="timeline"></span></button>
+        <button class="tl-btn" data-md="attachment" data-i18n-title="toolbar.attachment" disabled><span class="tl-ico" data-ico="attachment"></span></button>
         <button class="tl-btn tl-wide" data-md="more"><span class="more-label">更多</span><span class="chev"></span></button>
         <span class="tl-sep"></span>
-        <button class="tl-btn" data-md="help" title="Markdown 语法速查"><span class="glyph help">?</span></button>
+        <button class="tl-btn" data-md="help" data-i18n-title="toolbar.help"><span class="glyph help">?</span></button>
       </div>
     </div>
 
     <div class="right-group">
-      <button id="btn-readaloud" class="rb-btn" title="朗读（即将推出）" disabled><span class="tl-ico" data-ico="read-aloud"></span></button>
-      <button id="btn-settings" class="rb-btn" title="设置"><span class="tl-ico" data-ico="settings"></span></button>
+      <button id="btn-readaloud" class="rb-btn" data-i18n-title="toolbar.readAloudComing" disabled><span class="tl-ico" data-ico="read-aloud"></span></button>
+      <button id="btn-settings" class="rb-btn" data-i18n-title="toolbar.settings"><span class="tl-ico" data-ico="settings"></span></button>
     </div>
   </nav>
 
@@ -98,11 +98,11 @@
 
   <!-- D 区：状态栏（36px，#f9f9f9） -->
   <footer id="statusbar">
-    <button class="st-seg" id="st-linecol" title="转到行">行 1, 列 1</button>
+    <button class="st-seg" id="st-linecol" title="转到行" data-i18n="status.lineCol0">行 1, 列 1</button>
     <span class="st-div"></span>
-    <span class="st-seg static" id="st-chars">0 个字符</span>
+    <span class="st-seg static" id="st-chars" data-i18n="status.chars0">0 个字符</span>
     <span class="st-div"></span>
-    <button class="st-seg" id="st-lang" title="高亮语言">纯文本</button>
+    <button class="st-seg" id="st-lang" title="高亮语言" data-i18n="status.plainText">纯文本</button>
     <span class="st-div"></span>
     <span class="st-flex"></span>
     <button class="st-seg" id="st-zoom">100%</button>

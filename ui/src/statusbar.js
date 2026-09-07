@@ -3,6 +3,7 @@
 import { state, activeTab } from "./state.js";
 import { openMenu } from "./ui.js";
 import { updateStatus } from "./editor.js";
+import { t } from "./i18n.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -16,7 +17,7 @@ export function initStatusbar() {
 function languageItems() {
   const tab = activeTab();
   return [
-    { label: "自动检测", checked: tab && tab.langAuto !== false, disabled: !tab, action: () => setLang(autoDetect(tab)) },
+    { label: t("status.auto"), checked: tab && tab.langAuto !== false, disabled: !tab, action: () => setLang(autoDetect(tab)) },
     { sep: true },
     ...state.registry.languages.map((l) => ({
       label: l.name,
@@ -49,9 +50,9 @@ function setLang(langId) {
 
 function zoomItems() {
   return [
-    { label: "放大", shortcut: "Ctrl+加号", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: 10 })) },
-    { label: "缩小", shortcut: "Ctrl+减号", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: -10 })) },
-    { label: "恢复默认缩放", shortcut: "Ctrl+0", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: 0 })) },
+    { label: t("view.zoomIn"), shortcut: "Ctrl+加号", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: 10 })) },
+    { label: t("view.zoomOut"), shortcut: "Ctrl+减号", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: -10 })) },
+    { label: t("view.zoomReset"), shortcut: "Ctrl+0", action: () => window.dispatchEvent(new CustomEvent("zoom", { detail: 0 })) },
     { sep: true },
     { label: `当前缩放（30% – 500%）`, disabled: true },
   ];
@@ -59,7 +60,7 @@ function zoomItems() {
 
 function eolItems() {
   return state.registry.eols.map(([key, label]) => ({
-    label: `转换为 ${label}`,
+    label: `${t("status.eolConvert")} ${label}`,
     checked: activeTab() && activeTab().eol === key,
     disabled: !activeTab(),
     action: () => {
@@ -83,7 +84,7 @@ function encodingItems() {
   const tab = activeTab();
   return [
     ...state.registry.encodings.map(([key, label]) => ({
-      label: `重新以此编码打开：${label}`,
+      label: `${t("status.reopen")} ${label}`,
       disabled: !tab || !tab.path,
       action: async () => {
         persistActiveFromEditor();
@@ -97,7 +98,7 @@ function encodingItems() {
     })),
     { sep: true },
     ...state.registry.encodings.map(([key, label]) => ({
-      label: `以此编码保存：${label}`,
+      label: `${t("status.saveAsEnc")} ${label}`,
       disabled: !tab,
       action: () => {
         tab.encoding = key;

@@ -4,6 +4,7 @@
 核心能力（Markdown 所见即所得、JSON/XML 格式化、多语言语法高亮）以**插件**形式加载。
 
 需求文档：[docs/HiEditor-功能开发需求文档.md](docs/HiEditor-功能开发需求文档.md)
+插件开发指南：[插件开发指南.md](插件开发指南.md)（config.json 字段、C ABI 契约、编译部署）
 
 ## 架构
 

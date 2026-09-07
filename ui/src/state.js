@@ -23,7 +23,7 @@ export function activeTab() {
 export function newTabModel(init = {}) {
   return {
     id: state.seq++,
-    title: init.title || "无标题",
+    title: init.title || i18n_t("tab.untitled"),
     path: init.path || null,
     text: init.text || "",
     dirty: init.dirty || false,
@@ -36,12 +36,6 @@ export function newTabModel(init = {}) {
     scroll: 0,
     cursor: 0,
   };
-}
-
-export function langName(langId) {
-  const l = state.registry.languages.find((x) => x.id === langId);
-  if (l) return l.name;
-  return langId === "plaintext" ? "纯文本" : langId;
 }
 
 export function langForPath(path) {

@@ -4,6 +4,7 @@ import { state, activeTab, newTabModel, langForPath } from "./state.js";
 import { loadActiveIntoEditor, persistActiveFromEditor } from "./editor.js";
 import { showDialog, showBanner } from "./ui.js";
 import { scheduleSessionSave } from "./session.js";
+import { t } from "./i18n.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -21,14 +22,14 @@ export function addRecent(path) {
 export async function openFileDialog() {
   return window.__TAURI__.dialog.open({
     multiple: false,
-    filters: [{ name: "所有文件", extensions: ["*"] }],
+    filters: [{ name: t("dialog.allFiles"), extensions: ["*"] }],
   });
 }
 
 export async function saveDialog(defaultName) {
   return window.__TAURI__.dialog.save({
-    defaultPath: defaultName || "无标题.txt",
-    filters: [{ name: "所有文件", extensions: ["*"] }],
+    defaultPath: defaultName || t("tab.untitled") + ".txt",
+    filters: [{ name: t("dialog.allFiles"), extensions: ["*"] }],
   });
 }
 
@@ -64,10 +65,7 @@ export async function openPath(path, { activate = true } = {}) {
   else refreshTabs();
   if (out.lossy) {
     switchTab(tab.id);
-    showBanner({
-      message: "部分字符无法正确解码，已按检测编码打开。",
-      buttons: [{ label: "知道了" }],
-    });
+    showBanner({ message: t("banner.lossy") });
   }
   window.dispatchEvent(new CustomEvent("tab-updated", { detail: tab.id }));
   scheduleSessionSave();
@@ -81,8 +79,9 @@ export async function openFile() {
 
 export function newTab() {
   const used = new Set(state.tabs.filter((t) => !t.path).map((t) => t.title));
-  let title = "无标题";
-  for (let i = 2; used.has(title); i++) title = `无标题 ${i}`;
+  const untitled = t("tab.untitled");
+  let title = untitled;
+  for (let i = 2; used.has(title); i++) title = `${untitled} ${i}`;
   const tab = newTabModel({ title, lang: state.settings.new_tab_language || "plaintext" });
   state.tabs.push(tab);
   switchTab(tab.id);
@@ -180,11 +179,11 @@ export async function closeTab(id) {
   if (!tab) return;
   if (tab.dirty && state.settings.confirm_close !== false) {
     const choice = await showDialog({
-      title: `是否将更改保存到 ${tab.title}?`,
+      title: t("dialog.saveConfirm", { name: tab.title }),
       buttons: [
-        { label: "保存", primary: true, value: "save" },
-        { label: "不保存", value: "discard" },
-        { label: "取消", value: null },
+        { label: t("dialog.save"), primary: true, value: "save" },
+        { label: t("dialog.dontSave"), value: "discard" },
+        { label: t("dialog.cancel"), value: null },
       ],
     });
     if (choice === null) return;

@@ -10,6 +10,7 @@ import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAl
 import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance } from "./editor.js";
 import { setIcon } from "./icons.js";
 import { applyTheme } from "./theme.js";
+import * as i18n from "./i18n.js";
 import { scheduleSessionSave, flushSession } from "./session.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
@@ -29,6 +30,8 @@ async function boot() {
 
   state.registry = await invoke("get_registry");
   state.settings = await invoke("get_settings");
+  i18n.setLanguage(state.settings.language || "auto");
+  i18n.applyI18n();
   applyTheme(state.settings.theme || "light");
   setEditorDark((state.settings.theme || "light") === "dark");
   document.documentElement.style.setProperty(
@@ -88,7 +91,7 @@ async function restoreSession() {
     } else {
       // 未保存/有未保存修改的标签：直接用会话中的文本重建
       const t = newTabModel({
-        title: st.title || "无标题",
+        title: st.title || i18n.t("tab.untitled"),
         path: st.path || null,
         text: st.text || "",
         dirty: true,
@@ -112,7 +115,7 @@ async function restoreSession() {
   switchTab(actTab.id);
 
   const { showBanner } = await import("./ui.js");
-  showBanner({ message: "已恢复上次的会话", info: true, autoHideMs: 3000 });
+  showBanner({ message: i18n.t("banner.restored"), info: true, autoHideMs: 3000 });
   return true;
 }
 
@@ -120,7 +123,7 @@ async function restoreSession() {
 async function initDragDrop() {
   const overlay = document.createElement("div");
   overlay.id = "drop-overlay";
-  overlay.textContent = "松开以在 HiEditor 中打开";
+  overlay.textContent = i18n.t("drop.overlay");
   overlay.hidden = true;
   document.body.appendChild(overlay);
 

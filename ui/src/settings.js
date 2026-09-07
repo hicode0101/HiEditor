@@ -3,18 +3,20 @@
 import { state } from "./state.js";
 import { showDialog } from "./ui.js";
 import { ICONS } from "./icons.js";
+import { t } from "./i18n.js";
+import { setLanguage as i18nSetLanguage, applyI18n } from "./i18n.js";
 import { applyTheme } from "./theme.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
 const CATEGORIES = [
-  { id: "appearance", label: "外观" },
-  { id: "editor", label: "文本编辑" },
-  { id: "file", label: "文件" },
+  { id: "appearance", label: t("settings.cat.appearance") },
+  { id: "editor", label: t("settings.cat.editor") },
+  { id: "file", label: t("settings.cat.file") },
   { id: "markdown", label: "Markdown" },
-  { id: "session", label: "会话" },
-  { id: "plugins", label: "插件" },
-  { id: "about", label: "关于" },
+  { id: "session", label: t("settings.cat.session") },
+  { id: "plugins", label: t("settings.cat.plugins") },
+  { id: "about", label: t("settings.cat.about") },
 ];
 
 let current = "appearance"; // 每次进设置的默认分类（外观 = 主题风格）
@@ -42,11 +44,11 @@ async function render() {
   const back = document.createElement("button");
   back.className = "back-btn";
   back.innerHTML = ICONS.back;
-  back.title = "返回";
+  back.title = t("settings.back");
   back.addEventListener("click", closeSettings);
   const title = document.createElement("div");
   title.className = "settings-title";
-  title.textContent = "设置";
+  title.textContent = t("settings.title");
   top.append(back, title);
 
   const body = document.createElement("div");
@@ -131,7 +133,7 @@ function switchControl(value, onChange) {
 
 function persist() {
   invoke("save_settings", { value: state.settings }).catch((e) =>
-    showDialog({ title: "保存设置失败", body: String(e) })
+    showDialog({ title: t("settings.saveFailed"), body: String(e) })
   );
 }
 
@@ -140,12 +142,30 @@ function renderSettingsItems(panel, category) {
   const map = {
     appearance: [
       item(
-        { label: "主题风格", desc: "浅色 / 深色模式，切换后立即生效并记住" },
+        { label: t("settings.uiLang"), desc: t("settings.uiLang.desc") },
+        selectControl(
+          s.language || "auto",
+          [
+            ["auto", t("settings.uiLang.auto")],
+            ["zh-CN", "简体中文"],
+            ["en-US", "English"],
+          ],
+          (v) => {
+            s.language = v;
+            persist();
+            i18nSetLanguage(v);
+            applyI18n();
+            render();
+          }
+        )
+      ),
+      item(
+        { label: t("settings.theme"), desc: t("settings.theme.desc") },
         selectControl(
           s.theme || "light",
           [
-            ["light", "浅色模式"],
-            ["dark", "深色模式"],
+            ["light", t("settings.theme.light")],
+            ["dark", t("settings.theme.dark")],
           ],
           (v) => {
             s.theme = v;
@@ -156,21 +176,21 @@ function renderSettingsItems(panel, category) {
       ),
     ],
     editor: [
-      item({ label: "字号", desc: "8 – 72" }, numberControl(s.font_size, 8, 72, (v) => { s.font_size = v; persist(); })),
-      item({ label: "格式化缩进（JSON/XML）", desc: "0 表示 Tab" }, numberControl(s.format_indent, 0, 8, (v) => { s.format_indent = v; persist(); })),
+      item({ label: t("settings.fontSize"), desc: t("settings.fontSize.desc") }, numberControl(s.font_size, 8, 72, (v) => { s.font_size = v; persist(); })),
+      item({ label: t("settings.formatIndent"), desc: t("settings.formatIndent.desc") }, numberControl(s.format_indent, 0, 8, (v) => { s.format_indent = v; persist(); })),
     ],
     file: [
-      item({ label: "默认换行符" }, selectControl(s.default_eol, [["crlf", "Windows (CRLF)"], ["lf", "Unix (LF)"]], (v) => { s.default_eol = v; persist(); })),
-      item({ label: "默认编码" }, selectControl(s.default_encoding, state.registry.encodings, (v) => { s.default_encoding = v; persist(); })),
-      item({ label: "大文件提醒阈值 (MB)" }, numberControl(s.large_file_mb, 1, 512, (v) => { s.large_file_mb = v; persist(); })),
-      item({ label: "新建标签默认语言" }, selectControl(s.new_tab_language, [["plaintext", "纯文本"], ["markdown", "Markdown"]], (v) => { s.new_tab_language = v; persist(); })),
+      item({ label: t("settings.defaultEol") }, selectControl(s.default_eol, [["crlf", "Windows (CRLF)"], ["lf", "Unix (LF)"]], (v) => { s.default_eol = v; persist(); })),
+      item({ label: t("settings.defaultEncoding") }, selectControl(s.default_encoding, state.registry.encodings, (v) => { s.default_encoding = v; persist(); })),
+      item({ label: t("settings.largeFileMB") }, numberControl(s.large_file_mb, 1, 512, (v) => { s.large_file_mb = v; persist(); })),
+      item({ label: t("settings.newTabLang") }, selectControl(s.new_tab_language, [["plaintext", t("settings.newTabLang.plain")], ["markdown", "Markdown"]], (v) => { s.new_tab_language = v; persist(); })),
     ],
     markdown: [
-      item({ label: "默认编辑模式", desc: "所见即所得引擎在后续里程碑接入" }, selectControl(s.markdown_mode, [["wysiwyg", "所见即所得"], ["source", "源码"]], (v) => { s.markdown_mode = v; persist(); })),
+      item({ label: t("settings.mdMode"), desc: t("settings.mdMode.desc") }, selectControl(s.markdown_mode, [["wysiwyg", t("settings.mdMode.wysiwyg")], ["source", t("settings.mdMode.source")]], (v) => { s.markdown_mode = v; persist(); })),
     ],
     session: [
-      item({ label: "启动时恢复上次会话", desc: "恢复所有标签（含未保存内容）" }, switchControl(s.restore_session, (v) => { s.restore_session = v; persist(); })),
-      item({ label: "关闭未保存标签时提醒", desc: "关闭后静默保留在会话中，重启时仍可找回" }, switchControl(s.confirm_close, (v) => { s.confirm_close = v; persist(); })),
+      item({ label: t("settings.restoreSession"), desc: t("settings.restoreSession.desc") }, switchControl(s.restore_session, (v) => { s.restore_session = v; persist(); })),
+      item({ label: t("settings.confirmClose"), desc: t("settings.confirmClose.desc") }, switchControl(s.confirm_close, (v) => { s.confirm_close = v; persist(); })),
     ],
     about: [],
   };
@@ -178,7 +198,7 @@ function renderSettingsItems(panel, category) {
   if (category === "about") {
     const info = document.createElement("div");
     info.style.cssText = "font-size:13px;color:var(--text-secondary);line-height:2";
-    info.textContent = "HiEditor 0.1.0 — 跨平台轻量文本 / Markdown 编辑器";
+    info.textContent = "HiEditor 0.1.0 — " + t("about.desc");
     panel.appendChild(info);
   }
   if (category === "about") renderAbout(panel);
@@ -189,10 +209,10 @@ async function renderPlugins(panel) {
   try {
     state.plugins = await invoke("get_plugins");
   } catch (e) {
-    showDialog({ title: "插件列表获取失败", body: String(e) });
+    showDialog({ title: t("plugins.loadFailed"), body: String(e) });
     return;
   }
-  const stateLabel = { loaded: "已加载", disabled: "已停用", failed: "加载失败" };
+  const stateLabel = { loaded: t("plugins.state.loaded"), disabled: t("plugins.state.disabled"), failed: t("plugins.state.failed") };
   for (const p of state.plugins) {
     const row = document.createElement("div");
     row.className = "plugin-row";
@@ -213,11 +233,11 @@ async function renderPlugins(panel) {
         await invoke("set_plugin_enabled", { pluginId: p.id, enabled: on });
         p.enabled = on;
         showDialog({
-          title: "已更新插件开关",
-          body: "开关已写入插件的 config.json，重启 HiEditor 后生效。",
+          title: t("plugins.toggleTitle"),
+          body: t("plugins.toggleBody"),
         });
       } catch (e) {
-        showDialog({ title: "写入失败", body: String(e) });
+        showDialog({ title: t("dialog.writeFailed"), body: String(e) });
       }
     });
     row.append(info, badge, sw);
@@ -225,7 +245,7 @@ async function renderPlugins(panel) {
   }
   panel.appendChild(
     item(
-      { label: "已发现插件", desc: `共 ${state.plugins.length} 个；开关修改写入 config.json，重启生效` },
+      { label: t("plugins.discovered"), desc: t("plugins.discovered.desc", { n: state.plugins.length }) },
       document.createElement("span")
     )
   );
@@ -252,9 +272,9 @@ async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
     const { showBanner } = await import("./ui.js");
-    showBanner({ message: "已复制到剪贴板", info: true, autoHideMs: 1500 });
+    showBanner({ message: t("about.copied"), info: true, autoHideMs: 1500 });
   } catch (e) {
-    showDialog({ title: "复制失败", body: String(e) });
+    showDialog({ title: t("dialog.copyFailed"), body: String(e) });
   }
 }
 
@@ -262,19 +282,19 @@ function renderAbout(panel) {
   const repoActions = document.createElement("span");
   repoActions.style.cssText = "display:flex;gap:8px";
   repoActions.append(
-    miniBtn("打开", () =>
+    miniBtn(t("about.open"), () =>
       invoke("open_url", { url: ABOUT.repo }).catch((e) =>
-        showDialog({ title: "打开失败", body: String(e) })
+        showDialog({ title: t("dialog.openError"), body: String(e) })
       )
     ),
-    miniBtn("复制", () => copyText(ABOUT.repo))
+    miniBtn(t("about.copy"), () => copyText(ABOUT.repo))
   );
-  panel.appendChild(item({ label: "开源地址", desc: ABOUT.repo }, repoActions));
+  panel.appendChild(item({ label: t("about.source"), desc: ABOUT.repo }, repoActions));
 
   panel.appendChild(
     item(
-      { label: "作者微信", desc: ABOUT.wechatDisplay },
-      miniBtn("复制微信号", () => copyText(ABOUT.wechatId))
+      { label: t("about.wechat"), desc: ABOUT.wechatDisplay },
+      miniBtn(t("about.copyWechat"), () => copyText(ABOUT.wechatId))
     )
   );
 }
