@@ -6,7 +6,7 @@ import { initMenus } from "./menus.js";
 import { initToolbars } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
-import { newTab, switchTab, openPath, saveActive, saveActiveAs, saveAll, closeTab } from "./files.js";
+import { newTab, switchTab, openPath, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
 import { setZoom, setWrap, updateStatus, editorEl } from "./editor.js";
 import { setIcon } from "./icons.js";
 import { applyTheme } from "./theme.js";
@@ -107,6 +107,7 @@ function bindGlobalKeys() {
     else if (ctrl && !e.shiftKey && key === "s") { e.preventDefault(); saveActive(); }
     else if (ctrl && e.shiftKey && key === "s") { e.preventDefault(); saveActiveAs(); }
     else if (ctrl && e.altKey && key === "s") { e.preventDefault(); saveAll(); }
+    else if (ctrl && key === "p") { e.preventDefault(); printDocument(); }
     else if (ctrl && !e.shiftKey && key === "w") { e.preventDefault(); const t = activeTab(); if (t) closeTab(t.id); }
     else if (ctrl && (key === "=" || key === "+")) { e.preventDefault(); zoom(10); }
     else if (ctrl && key === "-") { e.preventDefault(); zoom(-10); }

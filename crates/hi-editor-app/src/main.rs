@@ -9,6 +9,9 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager, State};
 
+#[cfg(target_os = "windows")]
+use windows::Win32::Foundation::HWND;
+
 struct HostCell(Mutex<PluginHost>);
 
 #[derive(Serialize)]
@@ -271,6 +274,29 @@ fn open_url(url: String) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(target_os = "windows")]
+mod winprint;
+
+/// 调起系统 Win32 打印公共对话框并 GDI 直印（FR-2.11，Windows）；其他平台由前端回退。
+#[tauri::command]
+fn print_text(app: tauri::AppHandle, title: String, text: String) -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        let hwnd = app
+            .get_webview_window("main")
+            .ok_or("主窗口不存在")?
+            .hwnd()
+            .map_err(|e| format!("获取窗口句柄失败：{e}"))?
+            .0 as *mut core::ffi::c_void;
+        return winprint::show_print_dialog(HWND(hwnd), &title, text);
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = (&app, &title, &text);
+        Err("此平台暂不支持系统打印对话框".into())
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -288,7 +314,8 @@ fn main() {
             get_settings,
             save_settings,
             set_plugin_enabled,
-            open_url
+            open_url,
+            print_text
         ])
         .run(tauri::generate_context!())
         .expect("HiEditor 启动失败");

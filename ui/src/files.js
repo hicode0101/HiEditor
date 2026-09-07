@@ -119,6 +119,49 @@ export async function saveAll() {
   }
 }
 
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// 打印（FR-2.11）：Windows 调系统 Win32 打印对话框 + GDI 直印；其他平台回退 WebView 打印。
+export async function printDocument() {
+  persistActiveFromEditor();
+  const tab = activeTab();
+  if (!tab) return;
+  try {
+    const r = await invoke("print_text", { title: tab.title, text: tab.text });
+    if (r && r !== "cancelled") {
+      const { showBanner } = await import("./ui.js");
+      showBanner({ message: r, info: true, autoHideMs: 2500 });
+    }
+    return;
+  } catch (e) {
+    // 非 Windows / 系统对话框不可用时回退
+  }
+  legacyPrint(tab);
+}
+
+function legacyPrint(tab) {
+  const iframe = document.createElement("iframe");
+  iframe.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;opacity:0;border:0;";
+  document.body.appendChild(iframe);
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(
+    `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(tab.title)}</title>` +
+    `<style>@page { margin: 2cm; } body { margin: 0; color: #000; ` +
+    `font-family: "Cascadia Mono", Consolas, "Courier New", monospace; font-size: 12pt; ` +
+    `line-height: 1.5; white-space: pre-wrap; word-break: break-all; }</style></head>` +
+    `<body>${escapeHtml(tab.text)}</body></html>`
+  );
+  doc.close();
+  const cleanup = () => iframe.remove();
+  iframe.contentWindow.addEventListener("afterprint", cleanup);
+  iframe.contentWindow.focus();
+  iframe.contentWindow.print();
+  setTimeout(cleanup, 120000); // 兜底清理
+}
+
 export async function closeTab(id) {
   const tab = state.tabs.find((t) => t.id === id);
   if (!tab) return;

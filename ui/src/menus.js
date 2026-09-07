@@ -4,7 +4,7 @@ import { state, activeTab, formattersFor } from "./state.js";
 import { openMenu, showDialog, showBanner } from "./ui.js";
 import { editorEl, setHeading, replaceSelection } from "./editor.js";
 import {
-  openFile, newTab, saveActive, saveActiveAs, saveAll, closeTab,
+  openFile, newTab, saveActive, saveActiveAs, saveAll, closeTab, printDocument,
 } from "./files.js";
 
 function recentList() {
@@ -41,6 +41,8 @@ function fileItems() {
     { label: "保存", shortcut: "Ctrl+S", action: saveActive },
     { label: "另存为…", shortcut: "Ctrl+Shift+S", action: saveActiveAs },
     { label: "全部保存", shortcut: "Ctrl+Alt+S", action: saveAll, disabled: !state.tabs.some((t) => t.dirty || !t.path) },
+    { sep: true },
+    { label: "打印…", shortcut: "Ctrl+P", action: printDocument },
     { sep: true },
     { label: "关闭标签页", shortcut: "Ctrl+W", action: () => activeTab() && closeTab(activeTab().id) },
     { label: "关闭窗口", shortcut: "Ctrl+Shift+W", action: () => window.__TAURI__.window.getCurrentWindow().close() },
