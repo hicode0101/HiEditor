@@ -92,6 +92,38 @@ fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
         .map_err(|e| format!("无法定位用户数据目录：{e}"))
 }
 
+fn session_path(app: &AppHandle) -> Result<PathBuf, String> {
+    app.path()
+        .app_data_dir()
+        .map(|dir| dir.join("session.json"))
+        .map_err(|e| format!("无法定位用户数据目录：{e}"))
+}
+
+/// 读取上次会话（FR-10.2）；文件不存在返回 null，损坏时按无会话处理（BR-8）。
+#[tauri::command]
+fn load_session(app: AppHandle) -> Result<Option<serde_json::Value>, String> {
+    let path = session_path(&app)?;
+    match std::fs::read_to_string(&path) {
+        Ok(s) => serde_json::from_str(&s)
+            .map(Some)
+            .map_err(|e| format!("会话文件损坏：{e}")),
+        Err(_) => Ok(None),
+    }
+}
+
+/// 原子写入会话（FR-10.1/10.3：含未保存内容的标签状态）。
+#[tauri::command]
+fn save_session(app: AppHandle, session: serde_json::Value) -> Result<(), String> {
+    let path = session_path(&app)?;
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| format!("创建目录失败：{e}"))?;
+    }
+    let tmp = path.with_extension("json.tmp");
+    std::fs::write(&tmp, serde_json::to_vec(&session).map_err(|e| e.to_string())?)
+        .map_err(|e| format!("写入会话失败：{e}"))?;
+    std::fs::rename(&tmp, &path).map_err(|e| format!("替换会话失败：{e}"))
+}
+
 #[tauri::command]
 fn read_file(path: String, forced: Option<String>) -> Result<ReadOut, String> {
     let bytes = std::fs::read(&path).map_err(|e| format!("读取失败：{e}"))?;
@@ -318,6 +350,8 @@ fn main() {
             get_settings,
             save_settings,
             set_plugin_enabled,
+            load_session,
+            save_session,
             open_url,
             print_text
         ])

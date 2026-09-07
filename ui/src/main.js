@@ -10,6 +10,7 @@ import { newTab, switchTab, openPath, saveActive, saveActiveAs, saveAll, closeTa
 import { setZoom, setWrap, updateStatus, editorEl } from "./editor.js";
 import { setIcon } from "./icons.js";
 import { applyTheme } from "./theme.js";
+import { scheduleSessionSave, flushSession } from "./session.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -35,15 +36,70 @@ async function boot() {
   editorEl().style.setProperty("tab-size", state.settings.tab_width || 4);
   if (state.settings.wrap_default) setWrap(true);
 
-  // 初始标签（无会话恢复的默认路径；会话恢复在 M2 接入 FR-10）
-  const tab = newTabModel({ lang: state.settings.new_tab_language || "plaintext" });
-  state.tabs.push(tab);
-  switchTab(tab.id);
+  // 会话恢复（FR-10.2）：恢复上次退出/崩溃时的标签（含未保存内容）
+  const restored = await restoreSession();
+  if (!restored) {
+    const tab = newTabModel({ lang: state.settings.new_tab_language || "plaintext" });
+    state.tabs.push(tab);
+    switchTab(tab.id);
+  }
 
   bindGlobalKeys();
   bindEditorEvents();
   await initDragDrop();
   syncCaptionGlyph();
+  setInterval(() => flushSession(), 30000); // 30 秒兜底（FR-10.3）
+  window.addEventListener("beforeunload", () => { flushSession(); });
+}
+
+// 恢复上次会话；返回是否恢复了标签。
+async function restoreSession() {
+  if (!state.settings.restore_session) return false;
+  let sess = null;
+  try {
+    sess = await invoke("load_session");
+  } catch (e) {
+    return false; // 会话文件损坏按无会话处理（BR-8）
+  }
+  if (!sess || !Array.isArray(sess.tabs) || sess.tabs.length === 0) return false;
+
+  let restoredCount = 0;
+  for (const st of sess.tabs) {
+    if (st.path && st.text === undefined) {
+      // 干净的有路径标签：从磁盘重读
+      try {
+        const t = await openPath(st.path, { activate: false });
+        if (t) { t.zoom = st.zoom || 100; restoredCount++; }
+      } catch (e) { /* 文件打不开（被删等）→ 跳过该标签 */ }
+    } else {
+      // 未保存/有未保存修改的标签：直接用会话中的文本重建
+      const t = newTabModel({
+        title: st.title || "无标题",
+        path: st.path || null,
+        text: st.text || "",
+        dirty: true,
+        encoding: st.encoding || "utf8",
+        eol: st.eol || "crlf",
+        lang: st.lang || "plaintext",
+        mode: st.mode || "source",
+        zoom: st.zoom || 100,
+      });
+      state.tabs.push(t);
+      restoredCount++;
+    }
+  }
+  if (restoredCount === 0) return false;
+
+  const act = sess.tabs[sess.activeIndex] || sess.tabs[sess.tabs.length - 1];
+  const actTitle = act && act.title;
+  const actTab = state.tabs.find((t) => act && act.path && t.path === act.path) ||
+    state.tabs.find((t) => t.title === actTitle) ||
+    state.tabs[state.tabs.length - 1];
+  switchTab(actTab.id);
+
+  const { showBanner } = await import("./ui.js");
+  showBanner({ message: "已恢复上次的会话", info: true, autoHideMs: 3000 });
+  return true;
 }
 
 // 拖放打开文件（FR-12.1）：WebView 拦截系统拖放，必须订阅 Tauri 原生事件才能拿到绝对路径。
@@ -198,6 +254,7 @@ function bindEditorEvents() {
     updateStatus();
     // 轻量状态栏更新：同时刷新窗口标题脏标记
     document.title = `${tab.title}${tab.dirty ? " *" : ""} - HiEditor`;
+    scheduleSessionSave();
   });
   ["keyup", "click"].forEach((ev) => ed.addEventListener(ev, updateStatus));
   ed.addEventListener("scroll", () => {

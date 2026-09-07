@@ -3,6 +3,7 @@
 import { state, activeTab, newTabModel, langForPath } from "./state.js";
 import { loadActiveIntoEditor, persistActiveFromEditor } from "./editor.js";
 import { showDialog, showBanner } from "./ui.js";
+import { scheduleSessionSave } from "./session.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -69,6 +70,7 @@ export async function openPath(path, { activate = true } = {}) {
     });
   }
   window.dispatchEvent(new CustomEvent("tab-updated", { detail: tab.id }));
+  scheduleSessionSave();
   return tab;
 }
 
@@ -84,6 +86,7 @@ export function newTab() {
   const tab = newTabModel({ title, lang: state.settings.new_tab_language || "plaintext" });
   state.tabs.push(tab);
   switchTab(tab.id);
+  scheduleSessionSave();
   return tab;
 }
 
@@ -106,9 +109,9 @@ export async function saveTab(tab, { as = false } = {}) {
   tab.dirty = false;
   addRecent(path);
   document.title = `${tab.title} - HiEditor`;
-  addRecent(path);
   if (!tab.lang || tab.lang === "plaintext") tab.lang = langForPath(path);
   refreshTabs();
+  scheduleSessionSave();
   window.dispatchEvent(new CustomEvent("tab-updated", { detail: tab.id }));
   return true;
 }
@@ -192,6 +195,7 @@ export async function closeTab(id) {
   }
   const idx = state.tabs.indexOf(tab);
   state.tabs.splice(idx, 1);
+  scheduleSessionSave();
   if (state.tabs.length === 0) {
     window.__TAURI__.window.getCurrentWindow().close();
     return;

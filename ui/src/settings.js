@@ -12,6 +12,7 @@ const CATEGORIES = [
   { id: "editor", label: "文本编辑" },
   { id: "file", label: "文件" },
   { id: "markdown", label: "Markdown" },
+  { id: "session", label: "会话" },
   { id: "plugins", label: "插件" },
   { id: "about", label: "关于" },
 ];
@@ -166,6 +167,10 @@ function renderSettingsItems(panel, category) {
     ],
     markdown: [
       item({ label: "默认编辑模式", desc: "所见即所得引擎在后续里程碑接入" }, selectControl(s.markdown_mode, [["wysiwyg", "所见即所得"], ["source", "源码"]], (v) => { s.markdown_mode = v; persist(); })),
+    ],
+    session: [
+      item({ label: "启动时恢复上次会话", desc: "恢复所有标签（含未保存内容）" }, switchControl(s.restore_session, (v) => { s.restore_session = v; persist(); })),
+      item({ label: "关闭未保存标签时提醒", desc: "关闭后静默保留在会话中，重启时仍可找回" }, switchControl(s.confirm_close, (v) => { s.confirm_close = v; persist(); })),
     ],
     about: [],
   };
