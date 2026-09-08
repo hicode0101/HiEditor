@@ -38,6 +38,9 @@ export const ICONS = {
   attachment: S(`<path d="M4 2.5h5.5L12.5 5.5V13a0.8 0.8 0 0 1-0.8 0.8H4.8A0.8 0.8 0 0 1 4 13V3.3a0.8 0.8 0 0 1 0.8-0.8z"/><path d="M9.5 2.5v3h3"/>`),
   back: S(`<path d="M10 3L5 8l5 5"/>`),
   check: S(`<path d="M3 8.5l3.5 3.5L13 5"/>`),
+  // 编辑模式（FR-7.2）：所见即所得 = 眼睛（预览），源码 = 带斜杠的尖括号
+  wysiwyg: S(`<path d="M1.8 8C3.2 5.2 5.4 3.7 8 3.7s4.8 1.5 6.2 4.3C12.8 10.8 10.6 12.3 8 12.3S3.2 10.8 1.8 8z"/><circle cx="8" cy="8" r="1.9"/>`),
+  sourceCode: S(`<path d="M5.5 4.5L2 8l3.5 3.5"/><path d="M10.5 4.5L14 8l-3.5 3.5"/><path d="M9.2 3.5L6.8 12.5"/>`),
 };
 
 export function setIcon(el, name) {

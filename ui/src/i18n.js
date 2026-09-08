@@ -80,6 +80,11 @@ const ZH = {
   "toolbar.help": "Markdown 语法速查",
   "toolbar.readAloudComing": "朗读（即将推出）",
   "toolbar.settings": "设置",
+  "toolbar.more": "更多工具",
+  "toolbar.editMode": "切换编辑模式（源码 ⇄ 所见即所得）",
+  "toolbar.modeWysiwyg": "所见即所得 模式",
+  "toolbar.modeSource": "源码 模式",
+  "banner.wysiwygPending": "所见即所得引擎将在后续里程碑接入，当前以源码形态显示。",
 
   "status.lineCol": "行 {line}, 列 {col}",
   "status.lineCol0": "行 1, 列 1",
@@ -285,6 +290,11 @@ const EN = {
   "toolbar.help": "Markdown Cheat Sheet",
   "toolbar.readAloudComing": "Read Aloud (coming soon)",
   "toolbar.settings": "Settings",
+  "toolbar.more": "More tools",
+  "toolbar.editMode": "Switch edit mode (source ⇄ WYSIWYG)",
+  "toolbar.modeWysiwyg": "WYSIWYG mode",
+  "toolbar.modeSource": "Source mode",
+  "banner.wysiwygPending": "The WYSIWYG engine arrives in a later milestone; source view is used for now.",
 
   "status.lineCol": "Ln {line}, Col {col}",
   "status.lineCol0": "Ln 1, Col 1",

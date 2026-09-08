@@ -3,7 +3,7 @@
 import { state, activeTab, newTabModel, langForPath } from "./state.js";
 import { initTitlebar, syncCaptionGlyph } from "./titlebar.js";
 import { initMenus, initEditorContextMenu } from "./menus.js";
-import { initToolbars } from "./toolbar.js";
+import { initToolbars, updateToolbarOverflow } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
 import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
@@ -183,6 +183,7 @@ function switchToolbar() {
   document.getElementById("toolbar-font").hidden = !!custom;
   syncFontControls();
   applyTabFont();
+  updateToolbarOverflow(); // 容器切换后重测溢出收纳
 }
 
 function bindGlobalKeys() {

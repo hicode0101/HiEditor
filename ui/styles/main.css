@@ -245,7 +245,25 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   justify-content: center;
   min-width: 0;
 }
-.toolbar { display: flex; align-items: center; gap: 4px; }
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  /* 溢出收纳（v1.7）：允许随窗口收缩，JS 量测隐藏装不下的项并以"⋯"按钮收纳 */
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.tl-overflow { font-size: 16px; font-weight: 600; letter-spacing: 1px; }
+.menu-flyout.toolbar-overflow-panel {
+  position: fixed;
+  display: flex;
+  flex-wrap: wrap; /* 剩余工具项换行铺开 */
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  width: 360px;
+}
 .toolbar[hidden] { display: none; }
 
 .tl-btn {

@@ -154,11 +154,7 @@ function viewItems() {
 }
 
 function showWysiwygPending() {
-  showBanner({
-    message: "所见即所得引擎将在后续里程碑接入，当前以源码模式显示 Markdown。",
-    info: true,
-    autoHideMs: 3000,
-  });
+  showBanner({ message: t("banner.wysiwygPending"), info: true, autoHideMs: 3000 });
 }
 
 function switchMdMode(mode) {
