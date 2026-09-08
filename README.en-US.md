@@ -65,8 +65,10 @@ Extract the release package and run `HiEditor.exe` directly (Windows 10/11 ships
 Prerequisites: [Rust](https://rustup.rs/) (MSVC toolchain)
 
 ```bash
-# One-click build + release zip (version is configurable)
-package-release.bat 1.0.0
+# One-click build + release zip per platform (version / excluded plugins / output dir are configurable)
+package-win-release.bat 1.0.0          # Windows (run on Windows)
+./package-mac-release.sh 1.0.0         # macOS (run on macOS)
+./package-linux-release.sh 1.0.0       # Linux (run on Linux/WSL)
 
 # Or build only (main program + all plugins)
 cargo build --release

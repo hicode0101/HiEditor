@@ -65,8 +65,10 @@
 前置要求：[Rust](https://rustup.rs/)（MSVC 工具链）
 
 ```bash
-# 一键编译并打包发布 zip（版本号可指定）
-package-release.bat 1.0.0
+# 按平台一键编译并打包发布 zip（版本号 / 排除插件 / 输出目录均可配置）
+package-win-release.bat 1.0.0          # Windows（在 Windows 上执行）
+./package-mac-release.sh 1.0.0         # macOS（在 macOS 上执行）
+./package-linux-release.sh 1.0.0       # Linux（在 Linux/WSL 上执行）
 
 # 或仅编译（主程序 + 全部插件）
 cargo build --release
