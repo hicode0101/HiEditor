@@ -58,12 +58,14 @@ done
 echo "[4/5] 生成压缩包 $OUT_DIR/$PKG.zip ..."
 mkdir -p "$OUT_DIR"
 rm -f "$OUT_DIR/$PKG.zip"
+# 压缩暂存文件夹本身：zip 内带单一顶层文件夹，解压一次即得完整目录
 if command -v zip >/dev/null 2>&1; then
-    (cd "$STAGE" && zip -qr "../$PKG.zip" .)
+    (cd "$OUT_DIR" && zip -qr "$PKG.zip" "$PKG")
 else
     echo "       未找到 zip 命令，使用 python3 压缩。"
-    (cd "$STAGE" && python3 -m zipfile -c "../$PKG.zip" .)
+    (cd "$OUT_DIR" && python3 -m zipfile -c "$PKG.zip" "$PKG")
 fi
+rm -rf "$STAGE"
 
 echo "[5/5] 完成！"
 echo "      压缩包: $(pwd)/$OUT_DIR/$PKG.zip"
