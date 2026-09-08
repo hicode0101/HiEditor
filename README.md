@@ -1,52 +1,109 @@
+<div align="center">
+
 # HiEditor
 
-跨平台（Windows / macOS / Linux）轻量文本 / Markdown 编辑器，UI 1:1 复刻新版 Windows 记事本形态，
-核心能力（Markdown 所见即所得、JSON/XML 格式化、多语言语法高亮）以**插件**形式加载。
+**一个轻量、快速、插件化的跨平台文本 / 代码编辑器**
 
-需求文档：[docs/HiEditor-功能开发需求文档.md](docs/HiEditor-功能开发需求文档.md)
-插件开发指南：[插件开发指南.md](插件开发指南.md)（config.json 字段、C ABI 契约、编译部署）
+简洁的 Windows 11 记事本风格界面，内置 15 门语言语法高亮与 JSON/XML 格式化，原生 C ABI 插件体系。
 
-## 架构
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)]()
+[![Rust](https://img.shields.io/badge/built%20with-Rust-DEA584?logo=rust)]()
+[![Tauri](https://img.shields.io/badge/Tauri%202-24C8DB?logo=tauri&logoColor=white)]()
+[![i18n](https://img.shields.io/badge/i18n-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%20%7C%20English-green)]()
 
-```
-crates/
-├─ hi-editor-core/        # 纯 Rust 核心：编码检测 / 换行符 / 设置持久化（可单测）
-├─ hi-editor-plugin/      # 插件宿主：扫描 plugins/、解析 config.json、加载动态库、扩展点
-├─ hi-editor-plugin-abi/  # 插件稳定 C ABI 契约（附录 C.4）
-└─ hi-editor-app/         # Tauri 2 壳：窗口、命令层
-ui/                       # 前端（原生 JS + CSS，无框架；CodeMirror/Milkdown 后续接入）
-plugins/                  # 内置插件：markdown / json / xml / plaintext / code
-```
+简体中文 | [English](README.en-US.md)
 
-## 构建与运行（开发）
+</div>
 
-**一键编译（推荐）**：双击或执行 `build-release.bat` —— 自动编译 release 版、同步插件到 `plugins\*\bin\`，并可选择立即启动。
+---
 
-手动步骤：
+## 截图
+
+**主界面 —— 多标签 / 语法高亮 / 按标签字体字号**
+
+![HiEditor 主界面](docs/ScreenShot/HiEditor-1.png)
+
+**设置 —— 模态对话框 / 插件管理**
+
+![HiEditor 设置](docs/ScreenShot/HiEditor-2.png)
+
+## ✨ 功能特性
+
+### 编辑体验
+- 🗂️ **多标签编辑**：独立编码 / 换行符 / 语言 / 缩放，会话自动恢复（崩溃、强杀后未保存内容不丢失）
+- 🔤 **按标签字体字号**：每个标签独立设置字体与字号（10–36px），行高按 1.5× 联动缩放，切回即恢复
+- ↩️ **完整编辑菜单**：撤销 / 恢复 / 全选 / 剪切 / 复制 / 粘贴 / 删除，转大写 / 转小写 / 首字母大写其余小写
+- 🔍 **查找 / 替换**：顶部面板，支持区分大小写 / 正则 / 全词匹配、循环查找、全部替换，界面语言本地化
+- 🖱️ **拖放打开**、**打印**（Ctrl+P，支持输出为 PDF）、30%–500% 缩放、自动换行
+
+### 语言与高亮
+- **15 门语言语法高亮**：JSON / XML / Markdown / HTML / CSS / JavaScript / TypeScript / Python / Java / C# / C / C++ / Go / Rust / SQL / YAML / Shell / INI-TOML（按扩展名自动识别）
+- **JSON / XML 格式化与压缩**：编辑菜单、右键菜单、快捷键（Ctrl+Shift+J / Ctrl+Alt+J / Ctrl+Shift+L / Ctrl+Alt+L）多入口
+
+### 界面与主题
+- 🎨 **浅色 / 深色主题**：深色模式编辑区 `#2B2B2B`，全部控件跟随主题
+- 🌐 **界面国际化**：简体中文 / English，默认跟随系统，可强制指定
+- 🧰 **智能工具栏**：默认仅字体 / 字号；插件可按语言声明自定义工具栏（如 Markdown 工具栏）；窗口宽度不足时自动收纳溢出工具项，`⋯` 按钮换行展开
+- ⚙️ **模态设置对话框**：外观 / 文本编辑 / 文件 / Markdown / 会话 / 插件 / 关于
+
+### 文件与编码
+- 📖 **多编码支持**：UTF-8（含 BOM）/ UTF-16 LE/BE / **GBK / GB18030** / ANSI 容错解码，按编码重新打开或保存
+- ⚠️ **标签归属提示**：解码告警等状态横幅只在该标签显示，不干扰其它标签
+
+### 插件化架构
+- 🧩 **原生 C ABI 插件**：以动态库加载，`config.json` 声明式贡献语言 / 格式化命令 / 自定义工具栏 / 视图控件
+- 📦 **6 个内置插件**：JSON、XML、Markdown、记事本（纯文本）、TXT 增强、代码语言合集
+- 🔌 **插件管理**：设置页可视化启停，写入插件 `config.json`，重启生效
+
+## 🚀 快速开始
+
+### 下载使用
+解压发行包后直接运行 `HiEditor.exe`（Windows 10/11 自带 WebView2 运行时，无需安装额外依赖）。
+
+### 从源码构建
+
+前置要求：[Rust](https://rustup.rs/)（MSVC 工具链）
 
 ```bash
-# 1. 构建全部（含插件动态库）
+# 一键编译并打包发布 zip（版本号可指定）
+package-release.bat 1.0.0
+
+# 或仅编译（主程序 + 全部插件）
 cargo build --release
-
-# 2. 把插件动态库同步到 plugins/<name>/bin/（Linux/macOS 用 .so/.dylib）
-cp target/release/hieditor_json.dll plugins/json/bin/ && \
-  cp target/release/hieditor_xml.dll plugins/xml/bin/ && \
-  cp target/release/hieditor_markdown.dll plugins/markdown/bin/ && \
-  cp target/release/hieditor_notepad.dll plugins/notepad/bin/ && \
-  cp target/release/hieditor_txt.dll plugins/txt/bin/ && \
-  cp target/release/hieditor_code.dll plugins/code/bin/
-
-# 3. 运行（指定插件目录；也可放入 exe 同级 plugins/）
-HIEDITOR_PLUGINS_DIR=./plugins cargo run --bin HiEditor --release
 ```
 
-## 测试
+构建产物：`target/release/HiEditor.exe` + `plugins/<name>/bin/*.dll`；发布脚本会自动整理为解压即用的目录结构并压缩到 `dist/`。
 
-```bash
-cargo test -p hi-editor-core -p hi-editor-plugin -p hi-plugin-json -p hi-plugin-xml
+## 🧩 插件开发
+
+每个插件是一个目录：`config.json`（声明语言、格式化命令、工具栏等能力）+ 原生动态库（导出 `hi_plugin_meta / hi_plugin_command` 等稳定 C ABI 接口）。
+
+```json
+{
+  "id": "hieditor.json",
+  "languages": [{ "id": "json", "name": "JSON", "extensions": [".json", ".jsonc"], "highlight": true }],
+  "formatters": [{ "id": "json.pretty", "label": "JSON 格式化", "language": "json", "command": "pretty" }]
+}
 ```
 
-## 插件
+完整的 ABI 协议、构建与部署说明见 **[插件开发指南.md](插件开发指南.md)**。
 
-每个插件一个文件夹，`config.json` 声明名称、加载开关、平台入口与能力贡献；
-`enabled=false` 的插件启动时被忽略。详见需求文档附录 C。
+## 🗺️ 路线图
+
+- [ ] Markdown 所见即所得引擎（Milkdown / ProseMirror，当前以源码模式渲染）
+- [ ] 转到行、书签
+- [ ] GB 级大文件只读查看模式
+- [ ] 多窗口支持
+
+## 📄 文档
+
+- [功能开发需求文档](docs/HiEditor-功能开发需求文档.md) —— 完整需求基线（UI 规格 / 功能编号 / 验收标准）
+- [插件开发指南](插件开发指南.md) —— 从零开发一个 HiEditor 插件
+
+---
+
+<div align="center">
+
+**HiEditor** —— 用 Rust 打造的顺手编辑器
+
+</div>
