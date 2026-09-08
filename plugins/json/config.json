@@ -11,6 +11,10 @@
     "linux": "bin/hieditor_json.so",
     "macos": "bin/hieditor_json.dylib"
   },
+  "viewControls": [
+    "fontFamily",
+    "fontSize"
+  ],
   "languages": [
     { "id": "json", "name": "JSON", "extensions": [".json", ".jsonc"], "highlight": true }
   ],

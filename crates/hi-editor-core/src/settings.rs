@@ -11,6 +11,7 @@ pub struct Settings {
     pub language: String, // "auto" | "zh-CN" | "en-US"
     // 文本编辑
     pub font_size: u32,
+    pub font_family: String, // 空 = 跟随默认等宽字体栈
     pub tab_width: u32,
     pub wrap_default: bool,
     pub format_indent: u32,
@@ -34,6 +35,7 @@ impl Default for Settings {
         Self {
             theme: "light".into(),
             language: "auto".into(),
+            font_family: String::new(),
             font_size: 15,
             tab_width: 4,
             wrap_default: false,

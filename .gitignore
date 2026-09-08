@@ -13,3 +13,6 @@ crates/hi-editor-app/gen/
 *.log
 .DS_Store
 Thumbs.db
+
+*.lock
+package-lock.json

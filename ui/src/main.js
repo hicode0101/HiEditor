@@ -32,6 +32,7 @@ async function boot() {
   state.settings = await invoke("get_settings");
   i18n.setLanguage(state.settings.language || "auto");
   i18n.applyI18n();
+  applyEditorFont();
   applyTheme(state.settings.theme || "light");
   setEditorDark((state.settings.theme || "light") === "dark");
   document.documentElement.style.setProperty(
@@ -61,8 +62,10 @@ async function boot() {
     switchTab(tab.id);
   }
 
+  initFontControls();
   bindGlobalKeys();
   bindEditorEvents();
+  switchToolbar(); // 补一次同步：修复恢复/首建标签时工具栏状态未刷新
   await initDragDrop();
   syncCaptionGlyph();
   setInterval(() => flushSession(), 30000); // 30 秒兜底（FR-10.3）
@@ -166,8 +169,21 @@ async function initDragDrop() {
 function switchToolbar() {
   const tab = activeTab();
   const isMd = tab && tab.lang === "markdown" && state.registry.markdownLoaded;
-  document.getElementById("toolbar-default").hidden = !!isMd;
+  // 纯文本：TXT 插件贡献的 字体/字号 工具栏（txt 插件停用时降级为禁用的默认工具栏）
+  const isPlain = tab && tab.lang === "plaintext";
   document.getElementById("toolbar-markdown").hidden = !isMd;
+  document.getElementById("toolbar-plaintext").hidden = !isPlain;
+  document.getElementById("toolbar-default").hidden = isMd || isPlain;
+  // 字体/字号 select 在 HTML 里初始带 hidden，必须随容器同步显隐，否则永久不可见
+  const fam = document.getElementById("tl-font-family");
+  const sizeSel = document.getElementById("tl-font-size");
+  if (fam) fam.hidden = !isPlain;
+  if (sizeSel) sizeSel.hidden = !isPlain;
+  // 纯文本语言：默认工具栏按钮可用（插入 Markdown 语法，与新版记事本一致）
+  const plain = tab && tab.lang === "plaintext";
+  document.querySelectorAll("#toolbar-default .tl-btn").forEach((btn) => {
+    btn.disabled = !plain;
+  });
 }
 
 function bindGlobalKeys() {
@@ -267,6 +283,61 @@ function handleCmUpdate(u) {
     scheduleSessionSave();
   }
   if (u.selectionSet || u.docChanged) updateStatus();
+}
+
+function persistSettings() {
+  invoke("save_settings", { value: state.settings }).catch(() => {});
+}
+
+function initFontControls() {
+  const fam = document.getElementById("tl-font-family");
+  const fonts = [
+    ["", "默认字体"],
+    ["Cascadia Mono", "Cascadia Mono"],
+    ["Consolas", "Consolas"],
+    ["Courier New", "Courier New"],
+    ["SimSun", "宋体 SimSun"],
+    ["Microsoft YaHei", "微软雅黑"],
+    ["Arial", "Arial"],
+  ];
+  for (const [v, label] of fonts) {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = label;
+    fam.appendChild(opt);
+  }
+  fam.value = state.settings.editor_font_family || "";
+  fam.addEventListener("change", () => {
+    state.settings.editor_font_family = fam.value;
+    persistSettings();
+    applyEditorFont();
+  });
+
+  const sizeSel = document.getElementById("tl-font-size");
+  for (const n of [10, 11, 12, 14, 16, 18, 20, 24, 28, 36]) {
+    const opt = document.createElement("option");
+    opt.value = String(n);
+    opt.textContent = `${n} px`;
+    sizeSel.appendChild(opt);
+  }
+  sizeSel.value = String(state.settings.font_size || 15);
+  sizeSel.addEventListener("change", () => {
+    state.settings.font_size = Number(sizeSel.value) || 15;
+    persistSettings();
+    document.documentElement.style.setProperty(
+      "--editor-font-size",
+      `${state.settings.font_size}px`
+    );
+  });
+}
+
+function applyEditorFont() {
+  const fam = state.settings.editor_font_family;
+  if (fam) {
+    document.documentElement.style.setProperty("--editor-font-family", `"${fam}"`);
+  } else {
+    document.documentElement.style.removeProperty("--editor-font-family");
+  }
 }
 
 function bindEditorEvents() {

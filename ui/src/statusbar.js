@@ -17,13 +17,13 @@ export function initStatusbar() {
 function languageItems() {
   const tab = activeTab();
   return [
-    { label: t("status.auto"), checked: tab && tab.langAuto !== false, disabled: !tab, action: () => setLang(autoDetect(tab)) },
+    { label: t("status.auto"), checked: tab && tab.langAuto !== false, disabled: !tab, action: () => setTabLanguage(autoDetect(tab)) },
     { sep: true },
     ...state.registry.languages.map((l) => ({
       label: l.name,
       checked: tab && tab.lang === l.id,
       disabled: !tab,
-      action: () => setLang(l.id),
+      action: () => setTabLanguage(l.id),
     })),
   ];
 }
@@ -39,7 +39,7 @@ function autoDetect(tab) {
   return "plaintext";
 }
 
-function setLang(langId) {
+export function setTabLanguage(langId) {
   const tab = activeTab();
   if (!tab) return;
   tab.lang = langId;

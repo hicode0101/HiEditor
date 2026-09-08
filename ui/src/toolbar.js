@@ -7,16 +7,21 @@ import {
   replaceSelection, setHeading, toggleLinePrefix, toggleNumberedPrefix,
   insertBlock, markDirty, transformSelection,
 } from "./editor.js";
+import { setTabLanguage } from "./statusbar.js";
 
 export function initToolbars() {
-  // ===== 默认工具栏（非 Markdown：全部禁用，保持基准截图一形态） =====
-  document.querySelectorAll("#toolbar-default .tl-btn").forEach((btn) => {
-    btn.disabled = true;
-  });
-  // 即使禁用也提供 H1 下拉与表格选择器逻辑（Markdown 工具栏共用）
-  bindHeadingDropdown(document.querySelector('#toolbar-default [data-tl="heading"]'));
-  bindListDropdown(document.querySelector('#toolbar-default [data-tl="list"]'));
-  bindTablePicker(document.querySelector('#toolbar-default [data-tl="table"]'));
+  // ===== 默认工具栏（非 Markdown，基准截图一形态）=====
+  // 与新版记事本一致：对纯文本文件，按钮点击会把对应 Markdown 语法插入文本
+  const d = (name) => document.querySelector(`#toolbar-default [data-tl="${name}"]`);
+  bindHeadingDropdown(d("heading"));
+  bindListDropdown(d("list"));
+  bindTablePicker(d("table"));
+  d("bold").addEventListener("click", () => replaceSelection("**", "**", t("toolbar.ph.bold")));
+  d("italic").addEventListener("click", () => replaceSelection("*", "*", t("toolbar.ph.italic")));
+  d("strike").addEventListener("click", () => replaceSelection("~~", "~~", t("toolbar.ph.strike")));
+  d("link").addEventListener("click", insertLink);
+  // A✎：把当前标签语言切换为 Markdown（FR-2.3 第 8 项）→ 自动换为 Markdown 工具栏
+  d("md-toggle").addEventListener("click", () => setTabLanguage("markdown"));
 
   // ===== Markdown 工具栏（UI-2.5） =====
   const md = (name) => document.querySelector(`#toolbar-markdown [data-md="${name}"]`);

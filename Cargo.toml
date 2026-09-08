@@ -8,7 +8,8 @@ members = [
     "plugins/json",
     "plugins/xml",
     "plugins/markdown",
-    "plugins/plaintext",
+    "plugins/notepad",
+    "plugins/txt",
     "plugins/code",
 ]
 

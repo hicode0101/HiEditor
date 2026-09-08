@@ -27,6 +27,9 @@ pub struct Manifest {
     pub formatters: Vec<FormatterDecl>,
     #[serde(default)]
     pub menus: Option<MenusDecl>,
+    /// 视图控件贡献（EP-5 扩展）：如 ["fontFamily", "fontSize"]
+    #[serde(default, rename = "viewControls")]
+    pub view_controls: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

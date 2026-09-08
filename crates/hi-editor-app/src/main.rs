@@ -31,6 +31,8 @@ struct RegistryDto {
     encodings: Vec<(String, String)>,
     eols: Vec<(String, String)>,
     markdown_loaded: bool,
+    /// 视图控件贡献（去重后的 kind 列表，如 fontFamily/fontSize）
+    view_controls: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -166,6 +168,14 @@ fn get_registry(host: State<HostCell>) -> RegistryDto {
     let markdown_loaded = host
         .active_plugins()
         .any(|p| p.manifest.languages.iter().any(|l| l.id == "markdown"));
+    let mut view_controls: Vec<String> = Vec::new();
+    for p in host.active_plugins() {
+        for vc in &p.manifest.view_controls {
+            if !view_controls.iter().any(|v| v == vc) {
+                view_controls.push(vc.clone());
+            }
+        }
+    }
     RegistryDto {
         languages: host
             .languages()
@@ -197,6 +207,7 @@ fn get_registry(host: State<HostCell>) -> RegistryDto {
             .map(|(k, label)| (k.to_string(), label.to_string()))
             .collect(),
         markdown_loaded,
+        view_controls,
     }
 }
 

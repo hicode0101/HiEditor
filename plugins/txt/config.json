@@ -1,0 +1,18 @@
+{
+  "apiVersion": 1,
+  "author": "HiEditor",
+  "description": "为纯文本提供 字体 / 字号 工具栏控件",
+  "enabled": true,
+  "entry": {
+    "linux": "bin/hieditor_txt.so",
+    "macos": "bin/hieditor_txt.dylib",
+    "windows": "bin/hieditor_txt.dll"
+  },
+  "id": "hieditor.txt",
+  "name": "TXT 编辑增强",
+  "version": "1.0.0",
+  "viewControls": [
+    "fontFamily",
+    "fontSize"
+  ]
+}

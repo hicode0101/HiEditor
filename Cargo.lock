@@ -1341,7 +1341,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "hi-plugin-plaintext"
+name = "hi-plugin-notepad"
+version = "0.1.0"
+dependencies = [
+ "hi-editor-plugin-abi",
+]
+
+[[package]]
+name = "hi-plugin-txt"
 version = "0.1.0"
 dependencies = [
  "hi-editor-plugin-abi",

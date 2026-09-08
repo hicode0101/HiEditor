@@ -66,7 +66,7 @@ function editorTheme(dark) {
         backgroundColor: dark ? "#2b2b2b" : "#ffffff",
       },
       ".cm-content": {
-        fontFamily: MONO,
+        fontFamily: "var(--editor-font-family, Cascadia Mono, Consolas, Menlo, monospace)",
         caretColor: dark ? "#e8e8e8" : "#1b1b1b",
         fontSize: "calc(var(--editor-font-size) * var(--zoom) / 100)",
         lineHeight: "calc(var(--editor-line-height) * var(--zoom) / 100)",
