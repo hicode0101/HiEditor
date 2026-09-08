@@ -36,6 +36,7 @@ export function newTabModel(init = {}) {
     zoom: 100,
     fontFamily: init.fontFamily || null, // null = 跟随全局默认字体
     fontSize: init.fontSize || null, // null = 跟随全局默认字号
+    banner: init.banner || null, // 标签归属横幅（文件级状态提示，如编码告警），随标签显隐
     scroll: 0,
     cursor: 0,
   };

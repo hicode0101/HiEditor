@@ -1,5 +1,7 @@
 // 浮层组件：下拉菜单（UI-5.1）、错误对话框（UI-5.4 风格）、tooltip（UI-1.7 样式）
 
+import { state, activeTab } from "./state.js";
+
 const layer = () => document.getElementById("overlay-layer");
 
 let openFlyout = null;
@@ -198,17 +200,25 @@ export function closeDialog() {
   }
 }
 
-// ===== 横幅（FR-14） =====
+// ===== 横幅（FR-14）=====
+// 横幅分两类：全局操作反馈（自动消失）与文件级状态提示（归属触发它的标签，
+// 切到其它标签自动隐藏、切回恢复，关闭标签即消失）。
 
-export function showBanner({ message, buttons = [], info = false, autoHideMs = 0 }) {
+let bannerTabId = null;
+
+/**
+ * 全局横幅（单例，与标签无关）：操作反馈类提示（自动消失）。
+ */
+export function showBanner(spec, tabId = null) {
   dismissBanner();
+  bannerTabId = tabId;
   const banner = document.createElement("div");
-  banner.className = "banner" + (info ? " info" : "");
+  banner.className = "banner" + (spec.info ? " info" : "");
   const text = document.createElement("span");
   text.className = "bn-text";
-  text.textContent = message;
+  text.textContent = spec.message;
   banner.appendChild(text);
-  for (const b of buttons) {
+  for (const b of spec.buttons || []) {
     const btn = document.createElement("button");
     btn.className = "bn-btn";
     btn.textContent = b.label;
@@ -221,11 +231,32 @@ export function showBanner({ message, buttons = [], info = false, autoHideMs = 0
   const content = document.getElementById("content");
   content.insertBefore(banner, content.firstChild);
   banner.id = "active-banner";
-  if (autoHideMs > 0) setTimeout(dismissBanner, autoHideMs);
+  if (spec.autoHideMs > 0) setTimeout(dismissBanner, spec.autoHideMs);
+}
+
+/**
+ * 标签横幅（标签归属）：状态提示类（如编码告警），仅在该标签激活时显示，
+ * 归属信息记在 tab.banner 上随标签切换/关闭自动隐现。后续文件级提示均用此入口。
+ */
+export function showTabBanner(tabId, spec) {
+  const tab = state.tabs.find((t) => t.id === tabId);
+  if (tab) tab.banner = spec;
+  showBanner(spec, tabId);
 }
 
 export function dismissBanner() {
   document.getElementById("active-banner")?.remove();
+}
+
+// 切换标签时同步：隐藏不属于当前标签的横幅；当前标签有归属横幅则恢复显示
+export function syncTabBanner() {
+  const tab = activeTab();
+  if (tab && tab.banner) {
+    if (bannerTabId !== tab.id) showBanner({ message: tab.banner.message, info: tab.banner.info }, tab.id);
+    return;
+  }
+  if (bannerTabId !== null) dismissBanner(); // 当前横幅属于别的标签 → 收起
+  bannerTabId = null;
 }
 
 // ===== tooltip（UI-1.7） =====

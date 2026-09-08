@@ -22,7 +22,7 @@
   --selection-bg: #add6ff;
   --menu-bg: rgba(249, 249, 249, 0.95);
   --banner-warn-bg: #fff4ce;
-  --banner-info-bg: #f4f4f4;
+  --banner-info-bg: #EFF5FD;
   --caret: #1b1b1b;
   --scrollbar-thumb: #c5c5c5;
   --scrollbar-thumb-hover: #a8a8a8;
@@ -63,7 +63,7 @@
   --selection-bg: #294d6e;
   --menu-bg: rgba(43, 43, 43, 0.95);
   --banner-warn-bg: #433519;
-  --banner-info-bg: #323232;
+  --banner-info-bg: #263340;
   --caret: #e8e8e8;
   --scrollbar-thumb: #565656;
   --scrollbar-thumb-hover: #7a7a7a;
@@ -335,9 +335,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .rb-btn:hover:not(:disabled) { background: var(--light-hover); }
 
 /* ===== C 区：编辑区（CodeMirror 6 宿主）===== */
-#content { flex: 1; min-height: 0; position: relative; background: var(--content-bg); }
+/* 弹性列布局：横幅出现时编辑器自动收缩，避免盖住状态栏（height:100% 固定高度会下溢） */
+#content { flex: 1; min-height: 0; position: relative; background: var(--content-bg); display: flex; flex-direction: column; }
 
-#editor { height: 100%; overflow: hidden; }
+#editor { flex: 1; min-height: 0; overflow: hidden; }
 #editor .cm-editor { height: 100%; }
 #editor .cm-editor.cm-focused { outline: none; }
 #editor .cm-scroller { overflow: auto; }

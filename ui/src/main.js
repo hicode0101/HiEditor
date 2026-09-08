@@ -6,6 +6,7 @@ import { initMenus, initEditorContextMenu } from "./menus.js";
 import { initToolbars, updateToolbarOverflow } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
+import { syncTabBanner } from "./ui.js";
 import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
 import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance, openFind, openReplace } from "./editor.js";
 import { setIcon } from "./icons.js";
@@ -223,8 +224,10 @@ function bindGlobalKeys() {
   window.addEventListener("zoom", (e) => zoom(e.detail));
   window.addEventListener("toggle-wrap", toggleWrap);
   window.addEventListener("request-save", saveActive);
-  window.addEventListener("tab-switched", switchToolbar);
-  window.addEventListener("tabs-refresh", switchToolbar);
+  const syncTabUi = () => { switchToolbar(); syncTabBanner(); }; // 切标签：工具栏 + 标签横幅一并同步
+  window.addEventListener("tab-switched", syncTabUi);
+  window.addEventListener("tabs-refresh", syncTabUi);
+  window.addEventListener("settings-changed", switchToolbar);
   // 设置页改全局默认字号 → 未单独设置字号的标签立即生效（applyTabFont 回退默认值）
   window.addEventListener("settings-changed", switchToolbar);
   document.getElementById("btn-settings").addEventListener("click", () =>

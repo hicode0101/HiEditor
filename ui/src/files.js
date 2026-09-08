@@ -2,7 +2,7 @@
 
 import { state, activeTab, newTabModel, langForPath } from "./state.js";
 import { loadActiveIntoEditor, persistActiveFromEditor } from "./editor.js";
-import { showDialog, showBanner } from "./ui.js";
+import { showDialog, syncTabBanner } from "./ui.js";
 import { scheduleSessionSave } from "./session.js";
 import { t } from "./i18n.js";
 
@@ -59,14 +59,13 @@ export async function openPath(path, { activate = true } = {}) {
     encoding: out.encoding,
     eol: out.eol,
     lang: langForPath(path),
+    // 文件级提示归属本标签：仅在该标签激活时显示（v1.7）
+    banner: out.lossy ? { message: t("banner.lossy") } : null,
   });
   state.tabs.push(tab);
   if (activate) switchTab(tab.id);
   else refreshTabs();
-  if (out.lossy) {
-    switchTab(tab.id);
-    showBanner({ message: t("banner.lossy") });
-  }
+  syncTabBanner(); // activate=false 时横幅等切换到该标签再显示
   window.dispatchEvent(new CustomEvent("tab-updated", { detail: tab.id }));
   scheduleSessionSave();
   return tab;
