@@ -182,6 +182,7 @@ const ZH = {
   "settings.mdMode.source": "源码",
   "settings.restoreSession": "启动时恢复上次会话",
   "settings.restoreSession.desc": "恢复所有标签（含未保存内容）",
+  "settings.close": "关闭",
   "settings.confirmClose": "关闭未保存标签时提醒",
   "settings.confirmClose.desc": "关闭后静默保留在会话中，重启时仍可找回",
 
@@ -386,6 +387,7 @@ const EN = {
   "settings.mdMode.source": "Source",
   "settings.restoreSession": "Restore Previous Session",
   "settings.restoreSession.desc": "Restore all tabs (including unsaved content)",
+  "settings.close": "Close",
   "settings.confirmClose": "Confirm Before Closing Unsaved Tabs",
   "settings.confirmClose.desc": "When off, unsaved tabs are kept silently in the session and can be found after restart",
 

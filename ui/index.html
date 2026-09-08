@@ -89,8 +89,6 @@
   <!-- C 区：编辑区（CodeMirror 6 宿主） -->
   <main id="content">
     <div id="editor"></div>
-    <!-- 设置页（UI-5.8）：替换编辑区显示 -->
-    <section id="settings-page" hidden></section>
   </main>
 
   <!-- D 区：状态栏（36px，#f9f9f9） -->
@@ -108,6 +106,11 @@
     <span class="st-div"></span>
     <button class="st-seg" id="st-enc">UTF-8</button>
   </footer>
+
+  <!-- 设置模态框（UI-5.8 v1.7）：遮罩 + 居中对话框，打开期间阻塞主窗口操作 -->
+  <div id="settings-modal" hidden>
+    <section id="settings-page"></section>
+  </div>
 
   <!-- 浮层挂载点（下拉菜单 / 错误对话框） -->
   <div id="overlay-layer"></div>

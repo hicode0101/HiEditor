@@ -187,6 +187,7 @@ function switchToolbar() {
 
 function bindGlobalKeys() {
   window.addEventListener("keydown", (e) => {
+    if (state.settingsOpen) return; // 设置模态框打开期间阻塞全局快捷键（Esc 关闭由 settings.js 处理）
     const ctrl = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
     if (ctrl && !e.shiftKey && key === "n") { e.preventDefault(); newTab(); }
@@ -211,6 +212,7 @@ function bindGlobalKeys() {
   });
 
   document.addEventListener("wheel", (e) => {
+    if (state.settingsOpen) return; // 模态打开时缩放快捷滚轮不作用于遮罩下的编辑器
     if (e.ctrlKey) {
       e.preventDefault();
       zoom(e.deltaY < 0 ? 5 : -5);

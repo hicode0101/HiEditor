@@ -24,17 +24,21 @@ let current = "appearance"; // 每次进设置的默认分类（外观 = 主题�
 
 export async function openSettings() {
   state.settingsOpen = true;
-  document.getElementById("editor").hidden = true;
-  const page = document.getElementById("settings-page");
-  page.hidden = false;
+  document.activeElement?.blur?.(); // 焦点移出编辑区，防止遮罩下仍可键入
+  const modal = document.getElementById("settings-modal");
+  modal.hidden = false;
   await render();
 }
 
 export function closeSettings() {
   state.settingsOpen = false;
-  document.getElementById("settings-page").hidden = true;
-  document.getElementById("editor").hidden = false;
+  document.getElementById("settings-modal").hidden = true;
 }
+
+// Esc 关闭模态设置框（模态打开期间全局快捷键已在 main.js 侧被拦截）
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && state.settingsOpen) closeSettings();
+});
 
 async function render() {
   const page = document.getElementById("settings-page");
@@ -42,15 +46,15 @@ async function render() {
 
   const top = document.createElement("div");
   top.className = "settings-top";
-  const back = document.createElement("button");
-  back.className = "back-btn";
-  back.innerHTML = ICONS.back;
-  back.title = t("settings.back");
-  back.addEventListener("click", closeSettings);
   const title = document.createElement("div");
   title.className = "settings-title";
   title.textContent = t("settings.title");
-  top.append(back, title);
+  const close = document.createElement("button");
+  close.className = "settings-close-btn";
+  close.innerHTML = ICONS.close;
+  close.title = t("settings.close");
+  close.addEventListener("click", closeSettings);
+  top.append(title, close);
 
   const body = document.createElement("div");
   body.className = "settings-body";

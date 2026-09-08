@@ -328,16 +328,28 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 #editor .cm-scroller::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); background-clip: content-box; }
 #editor .cm-scroller::-webkit-scrollbar-corner { background: transparent; }
 
-/* 设置页（UI-5.8） */
-#settings-page {
-  position: absolute;
+/* 设置页（UI-5.8，v1.7 改为模态对话框：遮罩阻塞主窗口，关闭后才能继续操作） */
+#settings-modal {
+  position: fixed;
   inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050; /* 高于菜单浮层(1000)，低于设置内对话框(1100)/tooltip(1200) */
+}
+#settings-modal[hidden] { display: none; }
+#settings-page {
+  width: min(840px, calc(100vw - 96px)); /* v1.7: 640 + 200 加宽 */
+  height: min(460px, calc(100vh - 96px));
   background: var(--content-bg);
+  border: 1px solid var(--dialog-btn-border);
+  border-radius: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-#settings-page[hidden] { display: none; }
 .settings-top {
   height: 48px;
   display: flex;
@@ -352,6 +364,15 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 }
 .settings-top .back-btn:hover { background: var(--light-hover); }
 .settings-title { font-size: 20px; font-weight: 600; }
+.settings-top .settings-close-btn {
+  margin-left: auto;
+  width: 32px; height: 32px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+}
+.settings-top .settings-close-btn:hover { background: var(--light-hover); color: var(--text-primary); }
+.settings-top .settings-close-btn svg { width: 16px; height: 16px; }
 .settings-body { flex: 1; display: flex; min-height: 0; }
 .settings-nav {
   width: 220px;
