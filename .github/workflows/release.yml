@@ -5,8 +5,9 @@ name: Release Build
 
 on:
   push:
-    branches: [main]
-    tags: ["v*"]
+    # 如果没有下面的 branches tags 配置内容，则PUSH 不会触发
+    #branches: [main]
+    #tags: ["v*"]
   workflow_dispatch: # 允许手动触发
 
 jobs:
