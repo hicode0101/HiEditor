@@ -1,6 +1,6 @@
 // CodeMirror 6 封装入口（经 esbuild 打包为 ui/vendor/cm.js 供主代码动态 import）。
-// 导出 createEditor：含语言 compartment（JSON/XML/Markdown 高亮）、亮/暗主题 compartment、
-// 自动换行 compartment、撤销/重做（FR-17 高亮配色表在此落地）。
+// 导出 createEditor：含语言 compartment（JSON/XML/Markdown + code 插件 15 门语言高亮）、
+// 亮/暗主题 compartment、自动换行 compartment、撤销/重做（FR-17 高亮配色表在此落地）。
 
 import { EditorView, keymap, drawSelection, highlightActiveLine } from "@codemirror/view";
 import { EditorState, Compartment } from "@codemirror/state";
@@ -10,7 +10,21 @@ import {
 import { json } from "@codemirror/lang-json";
 import { xml } from "@codemirror/lang-xml";
 import { markdown } from "@codemirror/lang-markdown";
-import { syntaxHighlighting, HighlightStyle, indentUnit } from "@codemirror/language";
+import { html } from "@codemirror/lang-html";
+import { css } from "@codemirror/lang-css";
+import { javascript } from "@codemirror/lang-javascript";
+import { python } from "@codemirror/lang-python";
+import { java } from "@codemirror/lang-java";
+import { cpp } from "@codemirror/lang-cpp";
+import { go } from "@codemirror/lang-go";
+import { rust } from "@codemirror/lang-rust";
+import { sql } from "@codemirror/lang-sql";
+import { StreamLanguage, syntaxHighlighting, HighlightStyle, indentUnit } from "@codemirror/language";
+import { yaml } from "@codemirror/legacy-modes/mode/yaml";
+import { shell } from "@codemirror/legacy-modes/mode/shell";
+import { toml } from "@codemirror/legacy-modes/mode/toml";
+import { properties } from "@codemirror/legacy-modes/mode/properties";
+import { csharp } from "@codemirror/legacy-modes/mode/clike";
 import { tags as t } from "@lezer/highlight";
 
 export { undo, redo };
@@ -101,6 +115,22 @@ const langResolver = {
   json: () => json(),
   xml: () => xml(),
   markdown: () => markdown(),
+  // code 插件注册的 15 门语言（FR-17.2）：官方 Lezer 包 + legacy-modes 流式模式
+  html: () => html(),
+  css: () => css(),
+  javascript: () => javascript(),
+  typescript: () => javascript({ typescript: true, jsx: true }),
+  python: () => python(),
+  java: () => java(),
+  cpp: () => cpp(),
+  go: () => go(),
+  rust: () => rust(),
+  sql: () => sql(),
+  yaml: () => StreamLanguage.define(yaml),
+  shell: () => StreamLanguage.define(shell),
+  ini: () => StreamLanguage.define(properties), // .ini/.cfg/.conf 键值语法（.toml 同 ID 近似覆盖）
+  csharp: () => StreamLanguage.define(csharp),
+  // batch（.bat/.cmd）无 CM6 模式，保持纯文本（已知限制，见插件开发指南 §11）
 };
 
 export function langExtFor(langId) {

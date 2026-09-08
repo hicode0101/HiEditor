@@ -6,6 +6,7 @@ import { ICONS } from "./icons.js";
 import { t } from "./i18n.js";
 import { setLanguage as i18nSetLanguage, applyI18n } from "./i18n.js";
 import { applyTheme } from "./theme.js";
+import { setEditorDark } from "./editor.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -171,6 +172,7 @@ function renderSettingsItems(panel, category) {
             s.theme = v;
             persist();
             applyTheme(v);
+            setEditorDark(v === "dark"); // 编辑器主题 compartment 同步（否则运行中切主题编辑区不变）
           }
         )
       ),
