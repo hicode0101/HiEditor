@@ -9,7 +9,8 @@ export const state = {
     formatters: [],
     encodings: [],
     eols: [],
-    markdownLoaded: false,
+    viewControls: [],
+    toolbars: [], // [{language, toolbar}]：语言 → 插件自定义工具栏
   },
   settings: {},
   plugins: [],
@@ -33,6 +34,8 @@ export function newTabModel(init = {}) {
     lang: init.lang || "plaintext",
     mode: init.mode || "source", // WYSIWYG 引擎接入前以源码形态打开（FR-7.2 过渡）
     zoom: 100,
+    fontFamily: init.fontFamily || null, // null = 跟随全局默认字体
+    fontSize: init.fontSize || null, // null = 跟随全局默认字号
     scroll: 0,
     cursor: 0,
   };

@@ -20,6 +20,8 @@ export function tabSessionData(tab) {
     lang: tab.lang,
     mode: tab.mode,
     zoom: tab.zoom,
+    fontFamily: tab.fontFamily || null,
+    fontSize: tab.fontSize || null,
     scroll: tab.scroll,
     cursor: tab.cursor,
   };

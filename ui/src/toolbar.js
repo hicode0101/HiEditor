@@ -1,4 +1,5 @@
-// B 区工具栏（UI-2.3 默认工具栏 / UI-2.5 Markdown 工具栏）+ 表格选择器（UI-5.6）
+// 工具栏（UI-2.5 Markdown 自定义工具栏，由插件 config.json toolbar 声明驱动）
+// 默认工具栏（字体/字号）绑定见 main.js initFontControls
 
 import { activeTab } from "./state.js";
 import { openPopover } from "./ui.js";
@@ -7,24 +8,10 @@ import {
   replaceSelection, setHeading, toggleLinePrefix, toggleNumberedPrefix,
   insertBlock, markDirty, transformSelection,
 } from "./editor.js";
-import { setTabLanguage } from "./statusbar.js";
 
 export function initToolbars() {
-  // ===== 默认工具栏（非 Markdown，基准截图一形态）=====
-  // 与新版记事本一致：对纯文本文件，按钮点击会把对应 Markdown 语法插入文本
-  const d = (name) => document.querySelector(`#toolbar-default [data-tl="${name}"]`);
-  bindHeadingDropdown(d("heading"));
-  bindListDropdown(d("list"));
-  bindTablePicker(d("table"));
-  d("bold").addEventListener("click", () => replaceSelection("**", "**", t("toolbar.ph.bold")));
-  d("italic").addEventListener("click", () => replaceSelection("*", "*", t("toolbar.ph.italic")));
-  d("strike").addEventListener("click", () => replaceSelection("~~", "~~", t("toolbar.ph.strike")));
-  d("link").addEventListener("click", insertLink);
-  // A✎：把当前标签语言切换为 Markdown（FR-2.3 第 8 项）→ 自动换为 Markdown 工具栏
-  d("md-toggle").addEventListener("click", () => setTabLanguage("markdown"));
-
-  // ===== Markdown 工具栏（UI-2.5） =====
-  const md = (name) => document.querySelector(`#toolbar-markdown [data-md="${name}"]`);
+  // ===== Markdown 自定义工具栏（插件声明 toolbar.id = "markdown-wysiwyg"）=====
+  const md = (name) => document.querySelector(`#toolbar-markdown-wysiwyg [data-md="${name}"]`);
   bindHeadingDropdown(md("heading"));
   bindTablePicker(md("table"));
   bindMoreDropdown(md("more"));
@@ -89,15 +76,6 @@ function bindHeadingDropdown(btn) {
             }
       )
     );
-  });
-}
-
-function bindListDropdown(btn) {
-  btn.addEventListener("click", () => {
-    openMenu(btn, [
-      { label: t("toolbar.ul"), action: () => toggleLinePrefix("- ") },
-      { label: t("toolbar.ol"), action: () => toggleNumberedPrefix() },
-    ]);
   });
 }
 

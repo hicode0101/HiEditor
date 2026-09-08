@@ -69,7 +69,8 @@ function editorTheme(dark) {
         fontFamily: "var(--editor-font-family, Cascadia Mono, Consolas, Menlo, monospace)",
         caretColor: dark ? "#e8e8e8" : "#1b1b1b",
         fontSize: "calc(var(--editor-font-size) * var(--zoom) / 100)",
-        lineHeight: "calc(var(--editor-line-height) * var(--zoom) / 100)",
+        // 行高随字号等比缩放（1.5 倍），字号变大时行距同步变大，避免行间挤压
+        lineHeight: "calc(var(--editor-font-size) * 1.5 * var(--zoom) / 100)",
         padding: "8px 0 30vh",
       },
       "&.cm-focused": { outline: "none" },

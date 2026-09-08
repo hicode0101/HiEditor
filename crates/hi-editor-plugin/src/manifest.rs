@@ -30,6 +30,16 @@ pub struct Manifest {
     /// 视图控件贡献（EP-5 扩展）：如 ["fontFamily", "fontSize"]
     #[serde(default, rename = "viewControls")]
     pub view_controls: Vec<String>,
+    /// 自定义工具栏贡献（附录 C）：声明后，本插件声明的各语言显示
+    /// id 对应的工具栏（前端容器 id = `toolbar-{id}`）；未声明则用默认字体/字号栏
+    #[serde(default)]
+    pub toolbar: Option<ToolbarDecl>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ToolbarDecl {
+    pub id: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -157,6 +167,19 @@ mod tests {
         assert_eq!(m.languages[0].extensions, [".json", ".jsonc"]);
         assert_eq!(m.formatters[0].command, "pretty");
         assert!(m.formatters[0].shortcut.as_deref() == Some("Ctrl+Shift+J"));
+    }
+
+    #[test]
+    fn parses_toolbar_decl() {
+        let with_tb = SAMPLE.replace(
+            "\"menus\"",
+            r#""toolbar": { "id": "markdown-wysiwyg" }, "menus""#,
+        );
+        let m = Manifest::parse(&with_tb).unwrap();
+        assert_eq!(m.toolbar.as_ref().unwrap().id, "markdown-wysiwyg");
+        // 未声明 toolbar 的清单照常解析
+        let plain = Manifest::parse(SAMPLE).unwrap();
+        assert!(plain.toolbar.is_none());
     }
 
     #[test]

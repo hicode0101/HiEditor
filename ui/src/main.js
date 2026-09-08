@@ -32,13 +32,9 @@ async function boot() {
   state.settings = await invoke("get_settings");
   i18n.setLanguage(state.settings.language || "auto");
   i18n.applyI18n();
-  applyEditorFont();
+  applyTabFont(); // 默认字体/字号来自全局设置（每个标签可单独覆盖，FR per-tab）
   applyTheme(state.settings.theme || "light");
   setEditorDark((state.settings.theme || "light") === "dark");
-  document.documentElement.style.setProperty(
-    "--editor-font-size",
-    `${state.settings.font_size || 15}px`
-  );
 
   // 编辑器内核（CodeMirror 6）：语法高亮 / IME / 撤销
   // 注意：必须用根路径（/vendor/cm.js），相对路径会被解析到 /src/vendor/ 导致 404
@@ -89,7 +85,12 @@ async function restoreSession() {
       // 干净的有路径标签：从磁盘重读
       try {
         const t = await openPath(st.path, { activate: false });
-        if (t) { t.zoom = st.zoom || 100; restoredCount++; }
+        if (t) {
+          t.zoom = st.zoom || 100;
+          t.fontFamily = st.fontFamily || null;
+          t.fontSize = st.fontSize || null;
+          restoredCount++;
+        }
       } catch (e) { /* 文件打不开（被删等）→ 跳过该标签 */ }
     } else {
       // 未保存/有未保存修改的标签：直接用会话中的文本重建
@@ -103,6 +104,8 @@ async function restoreSession() {
         lang: st.lang || "plaintext",
         mode: st.mode || "source",
         zoom: st.zoom || 100,
+        fontFamily: st.fontFamily || null,
+        fontSize: st.fontSize || null,
       });
       state.tabs.push(t);
       restoredCount++;
@@ -168,22 +171,18 @@ async function initDragDrop() {
 
 function switchToolbar() {
   const tab = activeTab();
-  const isMd = tab && tab.lang === "markdown" && state.registry.markdownLoaded;
-  // 纯文本：TXT 插件贡献的 字体/字号 工具栏（txt 插件停用时降级为禁用的默认工具栏）
-  const isPlain = tab && tab.lang === "plaintext";
-  document.getElementById("toolbar-markdown").hidden = !isMd;
-  document.getElementById("toolbar-plaintext").hidden = !isPlain;
-  document.getElementById("toolbar-default").hidden = isMd || isPlain;
-  // 字体/字号 select 在 HTML 里初始带 hidden，必须随容器同步显隐，否则永久不可见
-  const fam = document.getElementById("tl-font-family");
-  const sizeSel = document.getElementById("tl-font-size");
-  if (fam) fam.hidden = !isPlain;
-  if (sizeSel) sizeSel.hidden = !isPlain;
-  // 纯文本语言：默认工具栏按钮可用（插入 Markdown 语法，与新版记事本一致）
-  const plain = tab && tab.lang === "plaintext";
-  document.querySelectorAll("#toolbar-default .tl-btn").forEach((btn) => {
-    btn.disabled = !plain;
+  // 自定义工具栏由插件 config.json 的 toolbar 声明驱动：语言 → 工具栏 id（附录 C）。
+  // 容器约定：id = "toolbar-" + toolbar.id（如 toolbar-markdown-wysiwyg）
+  const binding = tab && (state.registry.toolbars || []).find((b) => b.language === tab.lang);
+  const custom = binding ? document.getElementById(`toolbar-${binding.toolbar}`) : null;
+  document.querySelectorAll(".toolbar-wrap .toolbar").forEach((el) => {
+    if (el.id === "toolbar-font") return; // 默认栏最后统一处理
+    el.hidden = el !== custom;
   });
+  // 默认工具栏：仅 字体/字号（适用于未声明自定义工具栏的所有语言）
+  document.getElementById("toolbar-font").hidden = !!custom;
+  syncFontControls();
+  applyTabFont();
 }
 
 function bindGlobalKeys() {
@@ -221,6 +220,8 @@ function bindGlobalKeys() {
   window.addEventListener("request-save", saveActive);
   window.addEventListener("tab-switched", switchToolbar);
   window.addEventListener("tabs-refresh", switchToolbar);
+  // 设置页改全局默认字号 → 未单独设置字号的标签立即生效（applyTabFont 回退默认值）
+  window.addEventListener("settings-changed", switchToolbar);
   document.getElementById("btn-settings").addEventListener("click", () =>
     state.settingsOpen ? closeSettings() : openSettings()
   );
@@ -285,10 +286,6 @@ function handleCmUpdate(u) {
   if (u.selectionSet || u.docChanged) updateStatus();
 }
 
-function persistSettings() {
-  invoke("save_settings", { value: state.settings }).catch(() => {});
-}
-
 function initFontControls() {
   const fam = document.getElementById("tl-font-family");
   const fonts = [
@@ -306,38 +303,55 @@ function initFontControls() {
     opt.textContent = label;
     fam.appendChild(opt);
   }
-  fam.value = state.settings.editor_font_family || "";
+  // 字体 per-tab：只改当前标签（tab.fontFamily=null 表示跟随全局默认）
   fam.addEventListener("change", () => {
-    state.settings.editor_font_family = fam.value;
-    persistSettings();
-    applyEditorFont();
+    const tab = activeTab();
+    if (!tab) return;
+    tab.fontFamily = fam.value || null;
+    applyTabFont();
+    scheduleSessionSave();
   });
 
   const sizeSel = document.getElementById("tl-font-size");
-  for (const n of [10, 11, 12, 14, 16, 18, 20, 24, 28, 36]) {
+  for (const n of [10, 11, 12, 14, 15, 16, 18, 20, 24, 28, 36]) {
     const opt = document.createElement("option");
     opt.value = String(n);
     opt.textContent = `${n} px`;
     sizeSel.appendChild(opt);
   }
-  sizeSel.value = String(state.settings.font_size || 15);
+  // 字号 per-tab：只改当前标签（tab.fontSize=null 表示跟随全局默认）
   sizeSel.addEventListener("change", () => {
-    state.settings.font_size = Number(sizeSel.value) || 15;
-    persistSettings();
-    document.documentElement.style.setProperty(
-      "--editor-font-size",
-      `${state.settings.font_size}px`
-    );
+    const tab = activeTab();
+    if (!tab) return;
+    tab.fontSize = Number(sizeSel.value) || null;
+    applyTabFont();
+    scheduleSessionSave();
   });
+  syncFontControls();
 }
 
-function applyEditorFont() {
-  const fam = state.settings.editor_font_family;
+// 把字体/字号下拉框同步为当前标签的值（切标签时调用）
+function syncFontControls() {
+  const tab = activeTab();
+  if (!tab) return;
+  document.getElementById("tl-font-family").value = tab.fontFamily || "";
+  document.getElementById("tl-font-size").value = String(
+    tab.fontSize || state.settings.font_size || 15
+  );
+}
+
+// 应用当前标签的字体/字号（per-tab：仅对当前编辑的选项卡生效）。
+// 标签未单独设置时回退全局设置默认值；编辑器单实例，切换标签时重算 CSS 变量即可。
+function applyTabFont() {
+  const tab = activeTab();
+  const fam = (tab && tab.fontFamily) || "";
+  const size = (tab && tab.fontSize) || state.settings.font_size || 15;
   if (fam) {
     document.documentElement.style.setProperty("--editor-font-family", `"${fam}"`);
   } else {
     document.documentElement.style.removeProperty("--editor-font-family");
   }
+  document.documentElement.style.setProperty("--editor-font-size", `${size}px`);
 }
 
 function bindEditorEvents() {

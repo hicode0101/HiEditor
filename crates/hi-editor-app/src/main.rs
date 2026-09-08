@@ -30,9 +30,17 @@ struct RegistryDto {
     formatters: Vec<FormatterDto>,
     encodings: Vec<(String, String)>,
     eols: Vec<(String, String)>,
-    markdown_loaded: bool,
     /// 视图控件贡献（去重后的 kind 列表，如 fontFamily/fontSize）
     view_controls: Vec<String>,
+    /// 语言 → 自定义工具栏映射（插件 toolbar 声明聚合；无映射的语言用默认字体/字号栏）
+    toolbars: Vec<ToolbarBindingDto>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ToolbarBindingDto {
+    language: String,
+    toolbar: String,
 }
 
 #[derive(Serialize)]
@@ -165,9 +173,20 @@ fn save_file(path: String, text: String, encoding: String, eol: String) -> Resul
 #[tauri::command]
 fn get_registry(host: State<HostCell>) -> RegistryDto {
     let host = host.0.lock().unwrap();
-    let markdown_loaded = host
-        .active_plugins()
-        .any(|p| p.manifest.languages.iter().any(|l| l.id == "markdown"));
+    // 语言 → 自定义工具栏：插件声明 toolbar 时，其声明的每种语言都绑定该工具栏
+    let mut toolbars: Vec<ToolbarBindingDto> = Vec::new();
+    for p in host.active_plugins() {
+        if let Some(tb) = &p.manifest.toolbar {
+            for l in &p.manifest.languages {
+                if !toolbars.iter().any(|b| b.language == l.id) {
+                    toolbars.push(ToolbarBindingDto {
+                        language: l.id.clone(),
+                        toolbar: tb.id.clone(),
+                    });
+                }
+            }
+        }
+    }
     let mut view_controls: Vec<String> = Vec::new();
     for p in host.active_plugins() {
         for vc in &p.manifest.view_controls {
@@ -206,8 +225,8 @@ fn get_registry(host: State<HostCell>) -> RegistryDto {
             .iter()
             .map(|(k, label)| (k.to_string(), label.to_string()))
             .collect(),
-        markdown_loaded,
         view_controls,
+        toolbars,
     }
 }
 

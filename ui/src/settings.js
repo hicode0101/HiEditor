@@ -176,7 +176,7 @@ function renderSettingsItems(panel, category) {
       ),
     ],
     editor: [
-      item({ label: t("settings.fontSize"), desc: t("settings.fontSize.desc") }, numberControl(s.font_size, 8, 72, (v) => { s.font_size = v; persist(); })),
+      item({ label: t("settings.fontSize"), desc: t("settings.fontSize.desc") }, numberControl(s.font_size, 8, 72, (v) => { s.font_size = v; persist(); window.dispatchEvent(new CustomEvent("settings-changed")); })),
       item({ label: t("settings.formatIndent"), desc: t("settings.formatIndent.desc") }, numberControl(s.format_indent, 0, 8, (v) => { s.format_indent = v; persist(); })),
     ],
     file: [

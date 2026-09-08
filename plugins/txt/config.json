@@ -1,7 +1,7 @@
 {
   "apiVersion": 1,
   "author": "HiEditor",
-  "description": "为纯文本提供 字体 / 字号 工具栏控件",
+  "description": "TXT 编辑增强（v1.6 起字体/字号工具栏为宿主内置默认，对所有语言通用）",
   "enabled": true,
   "entry": {
     "linux": "bin/hieditor_txt.so",
@@ -10,9 +10,5 @@
   },
   "id": "hieditor.txt",
   "name": "TXT 编辑增强",
-  "version": "1.0.0",
-  "viewControls": [
-    "fontFamily",
-    "fontSize"
-  ]
+  "version": "1.0.0"
 }
