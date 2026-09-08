@@ -1,4 +1,4 @@
-//! 纯文本内置插件：txt/log 等无高亮兜底（FR-18.8）。
+//! 记事本内置插件（FR-18.8）：提供纯文本的基础编辑兜底（原 plaintext 插件更名）。
 
 use hi_editor_plugin_abi::hi_export_plugin;
 

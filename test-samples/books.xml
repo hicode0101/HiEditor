@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 这是注释：简单图书信息演示xml -->
+<books>
+    <book id="1">
+        <name>深入理解计算机系统</name>
+        <author>兰德尔·布莱恩特</author>
+        <price>139.00</price>
+        <category>计算机</category>
+    </book>
+    <book id="2">
+        <name>西游记</name>
+        <author>吴承恩</author>
+        <price>59.80</price>
+        <category>古典文学</category>
+    </book>
+</books>

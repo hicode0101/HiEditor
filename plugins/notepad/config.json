@@ -1,0 +1,26 @@
+{
+  "apiVersion": 1,
+  "author": "HiEditor",
+  "description": "纯文本的基础编辑兜底（原 plaintext 插件更名）",
+  "enabled": false,
+  "entry": {
+    "linux": "bin/hieditor_notepad.so",
+    "macos": "bin/hieditor_notepad.dylib",
+    "windows": "bin/hieditor_notepad.dll"
+  },
+  "id": "hieditor.notepad",
+  "languages": [
+    {
+      "extensions": [
+        ".txt",
+        ".log",
+        ".text"
+      ],
+      "highlight": false,
+      "id": "plaintext",
+      "name": "纯文本"
+    }
+  ],
+  "name": "记事本",
+  "version": "1.0.0"
+}

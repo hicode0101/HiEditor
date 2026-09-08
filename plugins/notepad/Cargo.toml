@@ -1,10 +1,10 @@
 [package]
-name = "hi-plugin-plaintext"
+name = "hi-plugin-notepad"
 version.workspace = true
 edition.workspace = true
 
 [lib]
-name = "hieditor_plaintext"
+name = "hieditor_notepad"
 crate-type = ["cdylib"]
 
 [dependencies]
