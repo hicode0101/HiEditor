@@ -24,22 +24,22 @@ if errorlevel 1 (
 
 echo.
 echo [2/3] 结束运行中的 HiEditor 并同步插件...
-taskkill /f /im hi-editor-app.exe >nul 2>nul
-for %%p in (json xml markdown plaintext code) do (
+taskkill /f /im HiEditor.exe >nul 2>nul
+for %%p in (json xml markdown notepad txt code) do (
     if not exist "plugins\%%p\bin" mkdir "plugins\%%p\bin"
     copy /y "target\release\hieditor_%%p.dll" "plugins\%%p\bin\" >nul
 )
-echo       插件已同步到 plugins\json、xml、markdown、plaintext、code 的 bin 目录
+echo       插件已同步到 plugins\json、xml、markdown、notepad、txt、code 的 bin 目录
 
 echo.
 echo [3/3] 完成！
-echo       主程序  target\release\hi-editor-app.exe
+echo       主程序  target\release\HiEditor.exe
 echo       插件    plugins\*\bin\hieditor_*.dll
 
 choice /c YN /m "是否立即启动 HiEditor"
 if errorlevel 2 goto :end
 set "HIEDITOR_PLUGINS_DIR=%~dp0plugins"
-start "" "%~dp0target\release\hi-editor-app.exe"
+start "" "%~dp0target\release\HiEditor.exe"
 
 :end
 pause

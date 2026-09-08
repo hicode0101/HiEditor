@@ -3,6 +3,10 @@ name = "hi-editor-app"
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "HiEditor"
+path = "src/main.rs"
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

@@ -32,11 +32,12 @@ cargo build --release
 cp target/release/hieditor_json.dll plugins/json/bin/ && \
   cp target/release/hieditor_xml.dll plugins/xml/bin/ && \
   cp target/release/hieditor_markdown.dll plugins/markdown/bin/ && \
-  cp target/release/hieditor_plaintext.dll plugins/plaintext/bin/ && \
+  cp target/release/hieditor_notepad.dll plugins/notepad/bin/ && \
+  cp target/release/hieditor_txt.dll plugins/txt/bin/ && \
   cp target/release/hieditor_code.dll plugins/code/bin/
 
 # 3. 运行（指定插件目录；也可放入 exe 同级 plugins/）
-HIEDITOR_PLUGINS_DIR=./plugins cargo run -p hi-editor-app --release
+HIEDITOR_PLUGINS_DIR=./plugins cargo run --bin HiEditor --release
 ```
 
 ## 测试
