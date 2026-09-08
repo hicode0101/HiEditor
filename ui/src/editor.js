@@ -4,14 +4,15 @@
 
 import { state, activeTab } from "./state.js";
 import { scheduleSessionSave } from "./session.js";
-import { t } from "./i18n.js";
-import { undo as cmUndo, redo as cmRedo } from "/vendor/cm.js";
+import { t, cmPhrases } from "./i18n.js";
+import { undo as cmUndo, redo as cmRedo, setPhrases as cmSetPhrases, openSearchPanel } from "/vendor/cm.js";
 
 let cm = null; // createEditor 返回的 API（view/setDoc/setLanguage/setDark/setWrap/focus）
 let wrapOn = false;
 
 export function initEditorInstance(api) {
   cm = api;
+  cmSetPhrases(cmPhrases()); // 搜索面板词条按当前界面语言注入
   api.view.scrollDOM.addEventListener("scroll", () => {
     const tab = activeTab();
     if (tab) tab.scroll = api.view.scrollDOM.scrollTop;
@@ -310,6 +311,39 @@ export function editorUndo() {
 export function editorRedo() {
   focusEditor();
   if (cm) cmRedo(cm.view);
+}
+
+// ===== 查找/替换（FR-4）：CM6 内置面板（含替换输入行），菜单/快捷键入口 =====
+
+export function openFind() {
+  if (!cm) return;
+  focusEditor();
+  openSearchPanel(cm.view);
+}
+
+// 替换与查找共用同一面板：替换输入行在可写文档中始终显示
+export const openReplace = openFind;
+
+// ===== 大小写转换（作用于选区，无选区时不动）=====
+
+export function transformUpper() {
+  transformWithGuard((s) => s.toUpperCase());
+}
+export function transformLower() {
+  transformWithGuard((s) => s.toLowerCase());
+}
+// 每个单词首字母大写、其余小写（Unicode 感知）
+export function transformCapitalize() {
+  transformWithGuard((s) =>
+    s.toLowerCase().replace(/\p{L}+/gu, (w) => w.charAt(0).toUpperCase() + w.slice(1))
+  );
+}
+
+function transformWithGuard(fn) {
+  if (!cm) return;
+  const { from, to } = cm.view.state.selection.main;
+  if (from === to) return; // 无选区不动作（避免误改与脏标记）
+  transformSelection(fn);
 }
 
 function isDarkTheme() {

@@ -69,13 +69,16 @@ export function openMenu(anchor, items, { align = "left", x = null, y = null } =
       const parentBtn = document.createElement("button");
       parentBtn.className = "menu-item" + (item.disabled ? "" : "");
       if (item.disabled) parentBtn.disabled = true;
+      const check = document.createElement("span");
+      check.className = "mi-check"; // 与普通项同构：16px 勾选占位列，保证标签左缘对齐
+      check.textContent = "✓";
       const lbl = document.createElement("span");
       lbl.className = "mi-label";
       lbl.textContent = item.label;
       const arrow = document.createElement("span");
       arrow.className = "mi-shortcut";
       arrow.textContent = "›";
-      parentBtn.append(lbl, arrow);
+      parentBtn.append(check, lbl, arrow);
       parentBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         const existing = holder.querySelector(":scope > .menu-flyout");

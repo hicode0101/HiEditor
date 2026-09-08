@@ -20,6 +20,7 @@ import { go } from "@codemirror/lang-go";
 import { rust } from "@codemirror/lang-rust";
 import { sql } from "@codemirror/lang-sql";
 import { StreamLanguage, syntaxHighlighting, HighlightStyle, indentUnit } from "@codemirror/language";
+import { search, searchKeymap, openSearchPanel } from "@codemirror/search";
 import { yaml } from "@codemirror/legacy-modes/mode/yaml";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { toml } from "@codemirror/legacy-modes/mode/toml";
@@ -27,7 +28,13 @@ import { properties } from "@codemirror/legacy-modes/mode/properties";
 import { csharp } from "@codemirror/legacy-modes/mode/clike";
 import { tags as t } from "@lezer/highlight";
 
-export { undo, redo };
+export { undo, redo, openSearchPanel };
+
+// 搜索/替换面板本地化词条（FR-4）：i18n 侧经 setPhrases 注入，切标签重建时生效
+let phraseMap = {};
+export function setPhrases(map) {
+  phraseMap = map || {};
+}
 
 const MONO = '"Cascadia Mono", Consolas, "SF Mono", Menlo, "DejaVu Sans Mono", "Microsoft YaHei Mono", monospace';
 
@@ -146,7 +153,9 @@ export function createEditor(parent, { doc, langId, dark, wrap, tabWidth, onUpda
 
   const buildExtensions = (langId2, dark2, wrap2) => [
     history(),
-    keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+    keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
+    search({ top: true }), // 查找/替换面板置顶（FR-4）
+    EditorState.phrases.of(phraseMap),
     drawSelection(),
     langComp.of(langExtFor(langId2)),
     themeComp.of(themePack(dark2)),

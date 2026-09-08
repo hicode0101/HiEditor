@@ -4,6 +4,7 @@
 const ZH = {
   "menu.file": "文件",
   "menu.edit": "编辑",
+  "menu.search": "搜索",
   "menu.view": "查看",
 
   "file.newTab": "新建标签页",
@@ -17,10 +18,11 @@ const ZH = {
   "file.print": "打印…",
   "file.closeTab": "关闭标签页",
   "file.closeWindow": "关闭窗口",
+  "file.settings": "设置",
   "file.exit": "退出",
 
   "edit.undo": "撤销",
-  "edit.redo": "重做",
+  "edit.redo": "恢复",
   "edit.cut": "剪切",
   "edit.copy": "复制",
   "edit.paste": "粘贴",
@@ -33,6 +35,9 @@ const ZH = {
   "edit.selectAll": "全选",
   "edit.timeDate": "时间/日期",
   "edit.format": "格式化",
+  "edit.upper": "转大写",
+  "edit.lower": "转小写",
+  "edit.capitalize": "首字母大写其余小写",
 
   "fmt.json.pretty": "JSON 格式化",
   "fmt.json.minify": "JSON 压缩",
@@ -203,6 +208,7 @@ const ZH = {
 const EN = {
   "menu.file": "File",
   "menu.edit": "Edit",
+  "menu.search": "Search",
   "menu.view": "View",
 
   "file.newTab": "New Tab",
@@ -216,6 +222,7 @@ const EN = {
   "file.print": "Print…",
   "file.closeTab": "Close Tab",
   "file.closeWindow": "Close Window",
+  "file.settings": "Settings",
   "file.exit": "Exit",
 
   "edit.undo": "Undo",
@@ -232,6 +239,9 @@ const EN = {
   "edit.selectAll": "Select All",
   "edit.timeDate": "Time & Date",
   "edit.format": "Format",
+  "edit.upper": "UPPERCASE",
+  "edit.lower": "lowercase",
+  "edit.capitalize": "Capitalize Each Word",
 
   "fmt.json.pretty": "Format JSON",
   "fmt.json.minify": "Minify JSON",
@@ -400,6 +410,32 @@ const EN = {
 };
 
 const DICT = { "zh-CN": ZH, "en-US": EN };
+
+// CM6 搜索/替换面板本地化词条（@codemirror/search phrases）
+export function cmPhrases() {
+  if (effectiveLang() !== "zh-CN") return {};
+  return {
+    "Find": "查找",
+    "Replace": "替换",
+    "next": "下一个",
+    "previous": "上一个",
+    "all": "全部",
+    "match case": "区分大小写",
+    "by word": "全词匹配",
+    "regular expression": "正则表达式",
+    "regexp": "正则",
+    "replace": "替换",
+    "replace with:": "替换为：",
+    "replace all": "全部替换",
+    "close": "关闭",
+    "current match": "当前匹配",
+    "replaced $ matches": "已替换 $ 处",
+    "replaced match on line $": "已替换第 $ 行的匹配",
+    "on line": "所在行",
+    "Go to line": "转到行",
+    "go to line": "转到行",
+  };
+}
 
 let eff = "zh-CN";
 

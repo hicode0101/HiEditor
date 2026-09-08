@@ -2,15 +2,17 @@
 
 import { state, activeTab, formattersFor } from "./state.js";
 import { t } from "./i18n.js";
-import { openMenu, showDialog, showBanner } from "./ui.js";
+import { openMenu, closeFlyout, showDialog, showBanner } from "./ui.js";
 import {
   focusEditor, getSelectionRange, replaceSelection, setHeading, isWrapOn,
   editorUndo, editorRedo, cutSelection, copySelection, pasteFromClipboard,
-  deleteSelection, selectAll,
+  deleteSelection, selectAll, transformUpper, transformLower, transformCapitalize,
+  openFind, openReplace,
 } from "./editor.js";
 import {
   openFile, newTab, saveActive, saveActiveAs, saveAll, closeTab, printDocument,
 } from "./files.js";
+import { openSettings } from "./settings.js";
 
 function recentList() {
   return JSON.parse(localStorage.getItem("hi-recents") || "[]");
@@ -51,6 +53,8 @@ function fileItems() {
     { sep: true },
     { label: t("file.closeTab"), shortcut: "Ctrl+W", action: () => activeTab() && closeTab(activeTab().id) },
     { label: t("file.closeWindow"), shortcut: "Ctrl+Shift+W", action: () => window.__TAURI__.window.getCurrentWindow().close() },
+    { sep: true },
+    { label: t("file.settings"), action: openSettings }, // 倒数第二：设置（FR-2 设置入口）
     { label: t("file.exit"), shortcut: "Alt+F4", action: () => window.__TAURI__.window.getCurrentWindow().close() },
   ];
 }
@@ -80,30 +84,43 @@ function editItems() {
     { label: t("edit.undo"), shortcut: "Ctrl+Z", action: editorUndo },
     { label: t("edit.redo"), shortcut: "Ctrl+Y", action: editorRedo },
     { sep: true },
+    { label: t("edit.selectAll"), shortcut: "Ctrl+A", action: selectAll },
     { label: t("edit.cut"), shortcut: "Ctrl+X", disabled: !hasSel, action: cutSelection },
     { label: t("edit.copy"), shortcut: "Ctrl+C", disabled: !hasSel, action: copySelection },
     { label: t("edit.paste"), shortcut: "Ctrl+V", action: pasteFromClipboard },
     { label: t("edit.delete"), shortcut: "Del", disabled: !hasSel, action: deleteSelection },
     { sep: true },
-    { label: t("edit.find"), shortcut: "Ctrl+F", disabled: true }, // M1（FR-4）
-    { label: t("edit.findNext"), shortcut: "F3", disabled: true },
-    { label: t("edit.findPrev"), shortcut: "Shift+F3", disabled: true },
-    { label: t("edit.replace"), shortcut: "Ctrl+H", disabled: true },
-    { label: t("edit.goto"), shortcut: "Ctrl+G", disabled: true },
+    { label: t("edit.upper"), disabled: !hasSel, action: transformUpper },
+    { label: t("edit.lower"), disabled: !hasSel, action: transformLower },
+    { label: t("edit.capitalize"), disabled: !hasSel, action: transformCapitalize },
     { sep: true },
-    { label: t("edit.selectAll"), shortcut: "Ctrl+A", action: selectAll },
-    { label: t("edit.timeDate"), shortcut: "F5", action: timeDate },
-    ...(fmts.length
-      ? [
-          { sep: true },
-          ...fmts.map((f) => ({
-            label: t(`fmt.${f.id}`) !== `fmt.${f.id}` ? t(`fmt.${f.id}`) : f.label,
-            shortcut: f.shortcut || undefined,
-            action: () => runFormatter(f),
-          })),
-        ]
-      : []),
+    {
+      // 与编辑区右键菜单一致的"格式化"子菜单（FR-16.8）：无可用格式化时整项禁用
+      label: t("edit.format"),
+      disabled: fmts.length === 0,
+      submenu: fmts.map((f) => ({
+        label: t(`fmt.${f.id}`) !== `fmt.${f.id}` ? t(`fmt.${f.id}`) : f.label,
+        shortcut: f.shortcut || undefined,
+        action: () => runFormatter(f),
+      })),
+    },
   ];
+}
+
+// 搜索菜单（FR-4）：查找 / 替换（CM6 内置面板）
+function searchItems() {
+  return [
+    { label: t("edit.find"), shortcut: "Ctrl+F", action: openFind },
+    { label: t("edit.replace"), shortcut: "Ctrl+H", action: openReplace },
+  ];
+}
+
+// 时间/日期插入（F5 同款）：修复此前 editItems 引用未定义函数导致编辑菜单整个打不开的 bug
+function timeDate() {
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  replaceSelection("", "", `${hh}:${mm} ${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`);
 }
 
 function viewItems() {
@@ -153,6 +170,7 @@ export function initMenus() {
   const defs = {
     file: fileItems,
     edit: editItems,
+    search: searchItems,
     view: viewItems,
   };
   document.querySelectorAll(".menu-btn").forEach((btn) => {
@@ -162,34 +180,20 @@ export function initMenus() {
   });
 }
 
-// ===== 编辑区右键菜单（FR-15.1）：格式化项按当前语言自动启用/禁用 =====
+// ===== 编辑区右键菜单（FR-15.1，v1.7 与顶部"编辑"菜单同构）：格式化项按当前语言自动启用/禁用 =====
 
 export function initEditorContextMenu() {
   const host = document.getElementById("editor");
   host.addEventListener("contextmenu", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const tab = activeTab();
-    const { from, to } = getSelectionRange();
-    const hasSel = tab && from !== to;
-    const fmts = tab ? formattersFor(tab.lang) : [];
-    const items = [
-      { label: t("edit.cut"), shortcut: "Ctrl+X", disabled: !hasSel, action: cutSelection },
-      { label: t("edit.copy"), shortcut: "Ctrl+C", disabled: !hasSel, action: copySelection },
-      { label: t("edit.paste"), shortcut: "Ctrl+V", action: pasteFromClipboard },
-      { sep: true },
-      { label: t("edit.selectAll"), shortcut: "Ctrl+A", action: selectAll },
-      { sep: true },
-      {
-        label: t("edit.format"),
-        disabled: fmts.length === 0,
-        submenu: fmts.map((f) => ({
-          label: f.label,
-          shortcut: f.shortcut || undefined,
-          action: () => runFormatter(f),
-        })),
-      },
-    ];
-    openMenu(host, items, { x: e.clientX, y: e.clientY });
+    // 一次性游离锚点：避开 openMenu 的"同一锚点再点=收起"语义——
+    // 否则第二次右键（锚点同为 #editor）只会关闭旧菜单而不会在新坐标重开
+    openMenu(document.createElement("span"), editItems(), { x: e.clientX, y: e.clientY });
+  });
+  // 左键点击编辑区：关闭仍打开的右键/下拉菜单（全局关闭器把 #editor 内的点击
+  // 视为"点在锚点上"而跳过关闭，这里显式补一刀）
+  host.addEventListener("mousedown", (e) => {
+    if (e.button === 0) closeFlyout();
   });
 }

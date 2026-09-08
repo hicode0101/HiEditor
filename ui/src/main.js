@@ -7,7 +7,7 @@ import { initToolbars } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
 import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
-import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance } from "./editor.js";
+import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance, openFind, openReplace } from "./editor.js";
 import { setIcon } from "./icons.js";
 import { applyTheme } from "./theme.js";
 import * as i18n from "./i18n.js";
@@ -196,6 +196,8 @@ function bindGlobalKeys() {
     else if (ctrl && e.shiftKey && key === "s") { e.preventDefault(); saveActiveAs(); }
     else if (ctrl && e.altKey && key === "s") { e.preventDefault(); saveAll(); }
     else if (ctrl && key === "p") { e.preventDefault(); printDocument(); }
+    else if (ctrl && !e.shiftKey && key === "f") { e.preventDefault(); openFind(); } // 搜索菜单（FR-4）
+    else if (ctrl && !e.shiftKey && key === "h") { e.preventDefault(); openReplace(); }
     else if (ctrl && !e.shiftKey && key === "w") { e.preventDefault(); const t = activeTab(); if (t) closeTab(t.id); }
     else if (ctrl && (key === "=" || key === "+")) { e.preventDefault(); zoom(10); }
     else if (ctrl && key === "-") { e.preventDefault(); zoom(-10); }
