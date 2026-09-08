@@ -12,6 +12,8 @@ ARCH="$(uname -m)"
 if [ "$ARCH" = "x86_64" ]; then PKG_ARCH="linux64"; else PKG_ARCH="linux-arm64"; fi
 PKG="HiEditor-${PKG_ARCH}-v${VERSION}"
 STAGE="$OUT_DIR/$PKG"
+# 支持把编译产物放到独立目录（如从 /mnt 挂载盘构建时指向 WSL 原生路径，大幅提速且不与 Windows 构建互相覆盖）
+TARGET_DIR="${CARGO_TARGET_DIR:-$PWD/target}"
 
 echo "============================================"
 echo " HiEditor 打包脚本 (Linux)"
@@ -34,7 +36,7 @@ pkill -x HiEditor 2>/dev/null || true
 echo "[3/5] 准备打包目录..."
 rm -rf "$STAGE"
 mkdir -p "$STAGE/plugins"
-install -m 755 target/release/HiEditor "$STAGE/HiEditor"
+install -m 755 "$TARGET_DIR/release/HiEditor" "$STAGE/HiEditor"
 
 for p in json xml markdown notepad txt code; do
     skip=""
@@ -49,7 +51,7 @@ for p in json xml markdown notepad txt code; do
         mkdir -p "$STAGE/plugins/$p/bin"
         cp "plugins/$p/config.json" "$STAGE/plugins/$p/"
         # cargo 产物带 lib 前缀（libhieditor_x.so），重命名为 manifest 声明的名称
-        cp "target/release/libhieditor_$p.so" "$STAGE/plugins/$p/bin/hieditor_$p.so"
+        cp "$TARGET_DIR/release/libhieditor_$p.so" "$STAGE/plugins/$p/bin/hieditor_$p.so"
     fi
 done
 
@@ -57,10 +59,10 @@ echo "[4/5] 生成压缩包 $OUT_DIR/$PKG.zip ..."
 mkdir -p "$OUT_DIR"
 rm -f "$OUT_DIR/$PKG.zip"
 if command -v zip >/dev/null 2>&1; then
-    (cd "$STAGE" && zip -qr "../../$PKG.zip" .)
+    (cd "$STAGE" && zip -qr "../$PKG.zip" .)
 else
     echo "       未找到 zip 命令，使用 python3 压缩。"
-    (cd "$STAGE" && python3 -m zipfile -c "../../$PKG.zip" .)
+    (cd "$STAGE" && python3 -m zipfile -c "../$PKG.zip" .)
 fi
 
 echo "[5/5] 完成！"

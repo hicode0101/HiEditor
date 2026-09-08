@@ -76,6 +76,8 @@ cargo build --release
 
 Build output: `target/release/HiEditor.exe` + `plugins/<name>/bin/*.dll`; the release script arranges everything into a ready-to-run directory layout and compresses it into `dist/`.
 
+**GitHub Actions auto-build**: pushing to `main` or tagging `v*` automatically builds on four platforms (Windows / Linux / macOS Intel / macOS Apple Silicon) and uploads the zips; tagging a release also creates a GitHub Release with all installers. See [.github/workflows/release.yml](.github/workflows/release.yml).
+
 ## 🧩 Plugin Development
 
 Each plugin is a directory: a `config.json` (declaring languages, formatter commands, toolbars, etc.) plus a native dynamic library exporting a stable C ABI (`hi_plugin_meta / hi_plugin_command`, ...).

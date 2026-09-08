@@ -51,7 +51,7 @@ done
 echo "[4/5] 生成压缩包 $OUT_DIR/$PKG.zip ..."
 mkdir -p "$OUT_DIR"
 rm -f "$OUT_DIR/$PKG.zip"
-(cd "$STAGE" && zip -qr "../../$PKG.zip" .)
+(cd "$STAGE" && zip -qr "../$PKG.zip" .)
 
 echo "[5/5] 完成！"
 echo "      压缩包: $(pwd)/$OUT_DIR/$PKG.zip"

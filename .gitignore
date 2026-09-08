@@ -16,3 +16,6 @@ Thumbs.db
 
 *.lock
 package-lock.json
+
+# Cargo.lock 必须提交（应用型项目锁定依赖版本，保证 CI 构建可复现）
+!Cargo.lock

@@ -76,6 +76,8 @@ cargo build --release
 
 构建产物：`target/release/HiEditor.exe` + `plugins/<name>/bin/*.dll`；发布脚本会自动整理为解压即用的目录结构并压缩到 `dist/`。
 
+**GitHub Actions 自动构建**：推送代码到 `main` 或打 `v*` 标签时，会在四平台（Windows / Linux / macOS Intel / macOS Apple Silicon）自动构建并上传 zip 产物；打标签还会自动创建带全部安装包的 GitHub Release。工作流见 [.github/workflows/release.yml](.github/workflows/release.yml)。
+
 ## 🧩 插件开发
 
 每个插件是一个目录：`config.json`（声明语言、格式化命令、工具栏等能力）+ 原生动态库（导出 `hi_plugin_meta / hi_plugin_command` 等稳定 C ABI 接口）。

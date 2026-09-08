@@ -1,0 +1,9 @@
+# 行尾规则：shell 脚本必须 LF（bat 的 CRLF 由 Git 处理），bat 必须 CRLF
+*.sh text eol=lf
+*.bat text eol=crlf
+*.rs text
+*.md text
+*.json text
+*.png binary
+*.ico binary
+*.zip binary
