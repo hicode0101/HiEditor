@@ -56,6 +56,17 @@ const lightHighlight = HighlightStyle.define([
   { tag: [t.bool, t.null], color: "#0000ff" },
   { tag: t.constant(t.name), color: "#0070c1" },
   { tag: t.operator, color: "#1b1b1b" },
+  // Markdown / 文档标记
+  { tag: t.heading, color: "#0000ff", "font-weight": "bold" },
+  { tag: t.strong, color: "#1b1b1b", "font-weight": "bold" },
+  { tag: t.emphasis, color: "#1b1b1b", "font-style": "italic" },
+  { tag: t.strikethrough, color: "#696969", "text-decoration": "line-through" },
+  { tag: t.link, color: "#0451a5", "text-decoration": "underline" },
+  { tag: t.url, color: "#0451a5" },
+  { tag: t.monospace, color: "#a31515" },
+  { tag: t.contentSeparator, color: "#800000", "font-weight": "bold" },
+  { tag: t.quote, color: "#5a5a5a", "font-style": "italic" },
+  { tag: t.processingInstruction, color: "#800000" },
 ]);
 
 // 深色高亮配色（附录 B 深色配色表）
@@ -76,6 +87,17 @@ const darkHighlight = HighlightStyle.define([
   { tag: [t.bool, t.null], color: "#569cd6" },
   { tag: t.constant(t.name), color: "#4fc1ff" },
   { tag: t.operator, color: "#d4d4d4" },
+  // Markdown / 文档标记
+  { tag: t.heading, color: "#569cd6", "font-weight": "bold" },
+  { tag: t.strong, color: "#e8e8e8", "font-weight": "bold" },
+  { tag: t.emphasis, color: "#e8e8e8", "font-style": "italic" },
+  { tag: t.strikethrough, color: "#808080", "text-decoration": "line-through" },
+  { tag: t.link, color: "#3794ff", "text-decoration": "underline" },
+  { tag: t.url, color: "#3794ff" },
+  { tag: t.monospace, color: "#ce9178" },
+  { tag: t.contentSeparator, color: "#569cd6", "font-weight": "bold" },
+  { tag: t.quote, color: "#808080", "font-style": "italic" },
+  { tag: t.processingInstruction, color: "#c586c0" },
 ]);
 
 function editorTheme(dark) {
@@ -118,6 +140,27 @@ function themePack(dark) {
   ];
 }
 
+// Windows 批处理（.bat/.cmd）：legacy-modes 无此模式，内置轻量流式词法
+// （注释 ::/REM、@前缀、关键词、:标签、%VAR%/%1/%%p/!VAR! 变量、字符串、数字）
+const batchLang = StreamLanguage.define({
+  name: "batch",
+  token(stream) {
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^::/)) { stream.skipToEnd(); return "comment"; }
+    if (stream.match(/^@\s*rem\b/i) || stream.match(/^rem\b/i)) { stream.skipToEnd(); return "comment"; }
+    if (stream.eat("@")) return "meta";
+    if (stream.match(/^(?:echo|setlocal|endlocal|set|if|else|for|in|do|goto|call|exit|shift|pause|not|exist|defined|errorlevel|equ|neq|lss|leq|gtr|geq|cd|chdir|md|mkdir|rd|rmdir|del|erase|copy|xcopy|robocopy|move|ren|rename|type|start|pushd|popd|title|cls|color|ver|vol|label|choice|find|findstr|sort|more|tree|attrib|tasklist|taskkill|net)\b/i)) return "keyword";
+    if (stream.match(/^:[A-Za-z_][\w.-]*/)) return "label";
+    if (stream.match(/^![^!\n]+!/)) return "variable";
+    if (stream.match(/^%%?[^%\s]+%?/)) return "variable";
+    if (stream.match(/^"(?:[^"\n]|"")*"/)) return "string";
+    if (stream.match(/^\d+/)) return "number";
+    stream.next();
+    return null;
+  },
+  languageData: { commentTokens: { line: "rem" } },
+});
+
 const langResolver = {
   json: () => json(),
   xml: () => xml(),
@@ -137,7 +180,8 @@ const langResolver = {
   shell: () => StreamLanguage.define(shell),
   ini: () => StreamLanguage.define(properties), // .ini/.cfg/.conf 键值语法（.toml 同 ID 近似覆盖）
   csharp: () => StreamLanguage.define(csharp),
-  // batch（.bat/.cmd）无 CM6 模式，保持纯文本（已知限制，见插件开发指南 §11）
+  batch: () => batchLang, // 自定义流式词法（legacy-modes 无 Batch 模式）
+  // batch（.bat/.cmd）之外全部语言已接入
 };
 
 export function langExtFor(langId) {

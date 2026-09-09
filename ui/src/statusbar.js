@@ -2,7 +2,7 @@
 
 import { state, activeTab } from "./state.js";
 import { openMenu } from "./ui.js";
-import { updateStatus } from "./editor.js";
+import { updateStatus, setEditorLanguage } from "./editor.js";
 import { t } from "./i18n.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
@@ -16,15 +16,23 @@ export function initStatusbar() {
 
 function languageItems() {
   const tab = activeTab();
+  if (!tab) return [{ label: t("status.auto"), disabled: true }];
+  // 置顶语言：Text（内置兜底，不依赖插件注册）/ Markdown / JSON / XML / Shell，其余语言按注册顺序跟在后面
+  const priority = ["plaintext", "markdown", "json", "xml", "shell"];
+  const names = new Map(state.registry.languages.map((l) => [l.id, l.name]));
+  const item = (id) => ({
+    label: id === "plaintext" ? t("status.plainText") : names.get(id) || id,
+    checked: tab.lang === id,
+    action: () => setTabLanguage(id),
+  });
+  const items = priority.map(item);
+  for (const l of state.registry.languages) {
+    if (!priority.includes(l.id)) items.push(item(l.id));
+  }
   return [
-    { label: t("status.auto"), checked: tab && tab.langAuto !== false, disabled: !tab, action: () => setTabLanguage(autoDetect(tab)) },
+    { label: t("status.auto"), checked: tab.langAuto !== false, action: () => setTabLanguage(autoDetect(tab)) },
     { sep: true },
-    ...state.registry.languages.map((l) => ({
-      label: l.name,
-      checked: tab && tab.lang === l.id,
-      disabled: !tab,
-      action: () => setTabLanguage(l.id),
-    })),
+    ...items,
   ];
 }
 
@@ -44,6 +52,7 @@ export function setTabLanguage(langId) {
   if (!tab) return;
   tab.lang = langId;
   tab.langAuto = false;
+  setEditorLanguage(langId); // 立即生效：编辑区高亮即时切换（v1.7 修复此前需切标签才生效的问题）
   window.dispatchEvent(new CustomEvent("tab-switched", { detail: tab.id }));
   updateStatus();
 }

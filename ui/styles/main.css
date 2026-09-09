@@ -183,6 +183,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .tab:not(.active):hover .tab-close .dot-hidden { display: none; }
 .tab:hover .tab-close { background: var(--dark-hover); }
 .tab.active .tab-close:hover { background: var(--light-pressed); }
+.tab.dragging { opacity: 0.55; }
 .tab .dirty-dot {
   width: 6px; height: 6px;
   border-radius: 50%;

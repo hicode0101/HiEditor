@@ -307,6 +307,43 @@ fn set_plugin_enabled(host: State<HostCell>, plugin_id: String, enabled: bool) -
 
 /// 用系统默认浏览器打开链接（关于页"开源地址"，跨平台）。
 #[tauri::command]
+fn reveal_path(path: String) -> Result<(), String> {
+    // 在系统文件管理器中定位该文件（Windows / macOS），Linux 打开所在目录
+    if path.trim().is_empty() || path.contains('"') || path.chars().any(|c| c.is_control()) {
+        return Err("非法的路径".into());
+    }
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        std::process::Command::new("explorer")
+            .arg(format!("/select,{path}"))
+            .creation_flags(CREATE_NO_WINDOW)
+            .spawn()
+            .map_err(|e| format!("打开失败：{e}"))?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .args(["-R", &path])
+            .spawn()
+            .map_err(|e| format!("打开失败：{e}"))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let dir = std::path::Path::new(&path)
+            .parent()
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "/".into());
+        std::process::Command::new("xdg-open")
+            .arg(dir)
+            .spawn()
+            .map_err(|e| format!("打开失败：{e}"))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
     // 白名单校验，防止经 start/xdg-open 注入参数。
     if !url.starts_with("https://") || url.chars().any(|c| c.is_whitespace() || c == '"') {
@@ -383,6 +420,7 @@ fn main() {
             load_session,
             save_session,
             open_url,
+            reveal_path,
             print_text
         ])
         .run(tauri::generate_context!())
