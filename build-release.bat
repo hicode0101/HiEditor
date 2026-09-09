@@ -3,40 +3,40 @@ setlocal
 cd /d "%~dp0"
 
 echo ============================================
-echo  HiEditor Release ç¼–è¯‘è„šæœ¬
+echo  HiEditor Release ±àÒë½Å±¾
 echo ============================================
 
 where cargo >nul 2>nul
 if errorlevel 1 (
-    echo [é”™è¯¯] æœªæ‰¾åˆ° cargoï¼Œè¯·å…ˆå®‰è£… Rust å·¥å…·é“¾ã€‚
+    echo [´íÎó] Î´ÕÒµ½ cargo£¬ÇëÏÈ°²×° Rust ¹¤¾ßÁ´¡£
     pause
     exit /b 1
 )
 
 echo.
-echo [1/3] ç¼–è¯‘ release ç‰ˆæœ¬ï¼ˆä¸»ç¨‹åº + æ’ä»¶ï¼‰...
+echo [1/3] ±àÒë release °æ±¾£¨Ö÷³ÌĞò + ²å¼ş£©...
 cargo build --release
 if errorlevel 1 (
-    echo [é”™è¯¯] ç¼–è¯‘å¤±è´¥ï¼Œè¯·æ£€æŸ¥ä¸Šæ–¹è¾“å‡ºã€‚
+    echo [´íÎó] ±àÒëÊ§°Ü£¬Çë¼ì²éÉÏ·½Êä³ö¡£
     pause
     exit /b 1
 )
 
 echo.
-echo [2/3] ç»“æŸè¿è¡Œä¸­çš„ HiEditor å¹¶åŒæ­¥æ’ä»¶...
+echo [2/3] ½áÊøÔËĞĞÖĞµÄ HiEditor ²¢Í¬²½²å¼ş...
 taskkill /f /im HiEditor.exe >nul 2>nul
-for %%p in (json xml markdown notepad txt code) do (
+for %%p in (json xml markdown txt code) do (
     if not exist "plugins\%%p\bin" mkdir "plugins\%%p\bin"
     copy /y "target\release\hieditor_%%p.dll" "plugins\%%p\bin\" >nul
 )
-echo       æ’ä»¶å·²åŒæ­¥åˆ° plugins\jsonã€xmlã€markdownã€notepadã€txtã€code çš„ bin ç›®å½•
+echo       ²å¼şÒÑÍ¬²½µ½ plugins\json¡¢xml¡¢markdown¡¢notepad¡¢txt¡¢code µÄ bin Ä¿Â¼
 
 echo.
-echo [3/3] å®Œæˆï¼
-echo       ä¸»ç¨‹åº  target\release\HiEditor.exe
-echo       æ’ä»¶    plugins\*\bin\hieditor_*.dll
+echo [3/3] Íê³É£¡
+echo       Ö÷³ÌĞò  target\release\HiEditor.exe
+echo       ²å¼ş    plugins\*\bin\hieditor_*.dll
 
-choice /c YN /m "æ˜¯å¦ç«‹å³å¯åŠ¨ HiEditor"
+choice /c YN /m "ÊÇ·ñÁ¢¼´Æô¶¯ HiEditor"
 if errorlevel 2 goto :end
 set "HIEDITOR_PLUGINS_DIR=%~dp0plugins"
 start "" "%~dp0target\release\HiEditor.exe"
