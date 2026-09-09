@@ -1,14 +1,14 @@
-# HiEditor 多平台自动构建：push 到 main 或推送 v* 标签时，构建四平台发布包
-# 产物（zip）挂到本次运行的艺术品区；打 tag 时额外自动创建 GitHub Release
+# HiEditor 多平台构建：已改为仅手动触发（Actions 页面 → Release Build → Run workflow）
+# 如需恢复 push / 打 tag 自动构建，把 on 段替换回：
+# on:
+#   push:
+#     branches: [main]
+#     tags: ["v*"]
 
 name: Release Build
 
 on:
-  push:
-    # 如果没有下面的 branches tags 配置内容，则PUSH 不会触发
-    #branches: [main]
-    #tags: ["v*"]
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch: # 仅手动触发
 
 jobs:
   build:
