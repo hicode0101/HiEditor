@@ -6,6 +6,7 @@ import { initMenus, initEditorContextMenu } from "./menus.js";
 import { initToolbars, updateToolbarOverflow } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
+import { initMarkdownPreview, applyMarkdownMode } from "./mdpreview.js";
 import { syncTabBanner } from "./ui.js";
 import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
 import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance, openFind, openReplace } from "./editor.js";
@@ -28,6 +29,7 @@ async function boot() {
   initToolbars();
   initStatusbar();
   initEditorContextMenu();
+  initMarkdownPreview();
 
   state.registry = await invoke("get_registry");
   state.settings = await invoke("get_settings");
@@ -85,6 +87,7 @@ async function boot() {
   bindGlobalKeys();
   bindEditorEvents();
   switchToolbar(); // 补一次同步：修复恢复/首建标签时工具栏状态未刷新
+  applyMarkdownMode();
   await initDragDrop();
   syncCaptionGlyph();
   setInterval(() => flushSession(), 30000); // 30 秒兜底（FR-10.3）
@@ -246,7 +249,7 @@ function bindGlobalKeys() {
   window.addEventListener("zoom", (e) => zoom(e.detail));
   window.addEventListener("toggle-wrap", toggleWrap);
   window.addEventListener("request-save", saveActive);
-  const syncTabUi = () => { switchToolbar(); syncTabBanner(); }; // 切标签：工具栏 + 标签横幅一并同步
+  const syncTabUi = () => { switchToolbar(); syncTabBanner(); applyMarkdownMode(); }; // 切标签：工具栏 + 标签横幅 + md 预览一并同步
   window.addEventListener("tab-switched", syncTabUi);
   window.addEventListener("tabs-refresh", syncTabUi);
   window.addEventListener("settings-changed", switchToolbar);

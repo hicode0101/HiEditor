@@ -94,7 +94,8 @@ For the full ABI protocol, build and deployment instructions, see the **[Plugin 
 
 ## 🗺️ Roadmap
 
-- [ ] Markdown WYSIWYG engine (Milkdown / ProseMirror; currently rendered as source)
+- [x] Markdown preview mode (Edit / Preview segmented toggle, GFM rendering)
+- [ ] Markdown WYSIWYG editing (Milkdown, in-place editing)
 - [ ] Go to line, bookmarks
 - [ ] Read-only viewer mode for GB-level files
 - [ ] Multi-window support

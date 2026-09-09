@@ -3,6 +3,7 @@
 import { state, activeTab, formattersFor } from "./state.js";
 import { t } from "./i18n.js";
 import { openMenu, closeFlyout, showDialog, showBanner } from "./ui.js";
+import { setMarkdownMode } from "./mdpreview.js";
 import {
   focusEditor, getSelectionRange, replaceSelection, setHeading, isWrapOn,
   editorUndo, editorRedo, cutSelection, copySelection, pasteFromClipboard,
@@ -146,20 +147,16 @@ function viewItems() {
       label: t("view.editModeGroup"),
       disabled: !isMd,
       submenu: [
-        { label: t("view.wysiwyg"), checked: isMd && tab.mode === "wysiwyg", disabled: !isMd, action: () => showWysiwygPending() },
-        { label: t("view.source"), checked: !isMd || tab.mode === "source", disabled: !isMd, action: () => switchMdMode("source") },
+        { label: t("view.wysiwyg"), checked: isMd && tab.mode === "wysiwyg", disabled: !isMd, action: () => setMarkdownMode("wysiwyg") },
+        { label: t("view.source"), checked: isMd && tab.mode !== "wysiwyg", disabled: !isMd, action: () => setMarkdownMode("source") },
       ],
     },
   ];
 }
 
-function showWysiwygPending() {
-  showBanner({ message: t("banner.wysiwygPending"), info: true, autoHideMs: 3000 });
-}
-
 function switchMdMode(mode) {
-  const tab = activeTab();
-  if (tab) tab.mode = mode;
+  setMarkdownMode(mode);
+  window.dispatchEvent(new CustomEvent("tabs-refresh"));
 }
 
 export function initMenus() {

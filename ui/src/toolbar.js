@@ -34,7 +34,7 @@ export function initToolbars() {
   md("formula").addEventListener("click", () => insertBlock("\n$$\nE = mc^2\n$$\n"));
   md("help").addEventListener("click", showMarkdownHelp);
 
-  // 编辑模式切换（源码 ⇄ 所见即所得，图标分段式；WYSIWYG 引擎接入前以横幅提示并保持源码渲染）
+  // 编辑模式切换（源码 ⇄ 预览，FR-7.2：与编辑区上方 Edit/Preview 分段控件同状态）
   bindTooltip(md("mode-wysiwyg"), () => t("toolbar.modeWysiwyg"));
   bindTooltip(md("mode-source"), () => t("toolbar.modeSource"));
   md("mode-wysiwyg").addEventListener("click", () => setTabMode("wysiwyg"));
@@ -180,10 +180,7 @@ function setTabMode(mode) {
   const tab = activeTab();
   if (!tab || tab.lang !== "markdown" || tab.mode === mode) return;
   tab.mode = mode;
-  if (mode === "wysiwyg") {
-    showBanner({ message: t("banner.wysiwygPending"), info: true, autoHideMs: 3000 });
-  }
-  updateModeBtn();
+  window.dispatchEvent(new CustomEvent("tabs-refresh")); // 触发 applyMarkdownMode 重渲染
   scheduleSessionSave();
 }
 

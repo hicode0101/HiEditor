@@ -88,9 +88,16 @@
     </div>
   </nav>
 
-  <!-- C 区：编辑区（CodeMirror 6 宿主） -->
+  <!-- C 区：编辑区（CodeMirror 6 宿主）+ Markdown 预览 -->
   <main id="content">
+    <div id="md-bar" hidden>
+      <div class="md-seg">
+        <button class="md-seg-btn" data-mdmode="edit" data-i18n="mdseg.edit">编辑</button>
+        <button class="md-seg-btn" data-mdmode="preview" data-i18n="mdseg.preview">预览</button>
+      </div>
+    </div>
     <div id="editor"></div>
+    <div id="md-preview" hidden></div>
   </main>
 
   <!-- D 区：状态栏（36px，#f9f9f9） -->

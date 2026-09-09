@@ -94,7 +94,8 @@ cargo build --release
 
 ## 🗺️ 路线图
 
-- [ ] Markdown 所见即所得引擎（Milkdown / ProseMirror，当前以源码模式渲染）
+- [x] Markdown 预览模式（Edit / Preview 分段切换，GFM 渲染）
+- [ ] Markdown 所见即所得编辑（Milkdown，原地编辑）
 - [ ] 转到行、书签
 - [ ] GB 级大文件只读查看模式
 - [ ] 多窗口支持
