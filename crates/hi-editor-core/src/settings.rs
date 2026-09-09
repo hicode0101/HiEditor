@@ -26,6 +26,8 @@ pub struct Settings {
     // 会话
     pub restore_session: bool,
     pub confirm_close: bool,
+    // 窗口
+    pub remember_window: bool, // 启动时恢复上次关闭时的窗口大小/位置（FR v1.7）
     // 插件
     pub user_plugins_dir: Option<String>,
 }
@@ -48,6 +50,7 @@ impl Default for Settings {
             markdown_mode: "wysiwyg".into(),
             restore_session: true,
             confirm_close: true,
+            remember_window: false,
             user_plugins_dir: None,
         }
     }

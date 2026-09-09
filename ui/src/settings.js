@@ -75,7 +75,7 @@ async function render() {
   const panel = document.createElement("div");
   panel.className = "settings-panel";
   if (current === "plugins") await renderPlugins(panel);
-  else renderSettingsItems(panel, current);
+  else await renderSettingsItems(panel, current);
   content.appendChild(panel);
 
   body.append(nav, content);
@@ -142,8 +142,46 @@ function persist() {
   );
 }
 
-function renderSettingsItems(panel, category) {
+// 一键创建桌面快捷方式按钮（Windows）
+function createShortcutButton() {
+  const btn = document.createElement("button");
+  btn.className = "settings-btn";
+  btn.textContent = t("settings.createShortcut");
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try {
+      await invoke("create_desktop_shortcut");
+      const { showBanner } = await import("./ui.js");
+      showBanner({ message: t("settings.shortcutCreated"), info: true, autoHideMs: 2500 });
+    } catch (e) {
+      showDialog({ title: t("settings.opFailed"), body: String(e) });
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  return btn;
+}
+
+// 资源管理器右键菜单开关（Windows）：写入/删除 HKCU 用户级注册表
+function contextMenuSwitch(enabled) {
+  const sw = switchControl(enabled, async (on) => {
+    try {
+      await invoke("set_explorer_context_menu", { enable: on });
+    } catch (e) {
+      sw.classList.toggle("on", !on); // 失败回滚开关视觉
+      showDialog({ title: t("settings.opFailed"), body: String(e) });
+    }
+  });
+  return sw;
+}
+
+async function renderSettingsItems(panel, category) {
   const s = state.settings;
+  // 文件类设置：右键菜单开关的初值来自注册表实际状态（HKCU 查询）
+  const ctxEnabled =
+    category === "file"
+      ? await invoke("explorer_context_menu_enabled").catch(() => false)
+      : false;
   const map = {
     appearance: [
       item(
@@ -190,6 +228,13 @@ function renderSettingsItems(panel, category) {
       item({ label: t("settings.defaultEncoding") }, selectControl(s.default_encoding, state.registry.encodings, (v) => { s.default_encoding = v; persist(); })),
       item({ label: t("settings.largeFileMB") }, numberControl(s.large_file_mb, 1, 512, (v) => { s.large_file_mb = v; persist(); })),
       item({ label: t("settings.newTabLang") }, selectControl(s.new_tab_language, [["plaintext", t("settings.newTabLang.plain")], ["markdown", "Markdown"]], (v) => { s.new_tab_language = v; persist(); })),
+      // 桌面快捷方式（一键创建，Windows）
+      item({ label: t("settings.desktopShortcut"), desc: t("settings.desktopShortcut.desc") }, createShortcutButton()),
+      // 资源管理器右键菜单开关（Windows，HKCU 用户级）
+      item(
+        { label: t("settings.contextMenu"), desc: t("settings.contextMenu.desc") },
+        contextMenuSwitch(ctxEnabled)
+      ),
     ],
     markdown: [
       item({ label: t("settings.mdMode"), desc: t("settings.mdMode.desc") }, selectControl(s.markdown_mode, [["wysiwyg", t("settings.mdMode.wysiwyg")], ["source", t("settings.mdMode.source")]], (v) => { s.markdown_mode = v; persist(); })),
@@ -197,6 +242,7 @@ function renderSettingsItems(panel, category) {
     session: [
       item({ label: t("settings.restoreSession"), desc: t("settings.restoreSession.desc") }, switchControl(s.restore_session, (v) => { s.restore_session = v; persist(); })),
       item({ label: t("settings.confirmClose"), desc: t("settings.confirmClose.desc") }, switchControl(s.confirm_close, (v) => { s.confirm_close = v; persist(); })),
+      item({ label: t("settings.rememberWindow"), desc: t("settings.rememberWindow.desc") }, switchControl(!!s.remember_window, (v) => { s.remember_window = v; persist(); })),
     ],
     about: [],
   };
@@ -204,7 +250,7 @@ function renderSettingsItems(panel, category) {
   if (category === "about") {
     const info = document.createElement("div");
     info.style.cssText = "font-size:13px;color:var(--text-secondary);line-height:2";
-    info.textContent = "HiEditor 0.1.0 — " + t("about.desc");
+    info.textContent = "HiEditor 1.0.0 — " + t("about.desc");
     panel.appendChild(info);
   }
   if (category === "about") renderAbout(panel);

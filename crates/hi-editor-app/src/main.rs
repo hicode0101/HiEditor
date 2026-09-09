@@ -7,12 +7,15 @@ use hi_editor_plugin::manifest::Manifest;
 use serde::Serialize;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 #[cfg(target_os = "windows")]
 use windows::Win32::Foundation::HWND;
 
 struct HostCell(Mutex<PluginHost>);
+
+/// 冷启动/第二实例转发的待打开文件路径（右键“用 HiEditor 编辑”入口）
+struct LaunchFile(Mutex<Option<String>>);
 
 #[derive(Serialize)]
 struct ReadOut {
@@ -344,6 +347,116 @@ fn reveal_path(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn create_desktop_shortcut() -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let workdir = exe
+            .parent()
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        // PS 单引号字符串中的单引号需双写转义
+        let esc = |s: String| s.replace('\'', "''");
+        let exe_str = esc(exe.to_string_lossy().into_owned());
+        let wd_str = esc(workdir);
+        let script = format!(
+            "$d=[Environment]::GetFolderPath('Desktop'); $l=Join-Path $d 'HiEditor.lnk'; \
+             $ws=New-Object -ComObject WScript.Shell; $s=$ws.CreateShortcut($l); \
+             $s.TargetPath='{exe_str}'; $s.WorkingDirectory='{wd_str}'; $s.IconLocation='{exe_str},0'; \
+             $s.Save(); Write-Output $l"
+        );
+        let out = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &script])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+            .map_err(|e| format!("执行失败：{e}"))?;
+        if !out.status.success() {
+            return Err(String::from_utf8_lossy(&out.stderr).into_owned());
+        }
+        Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("此功能当前仅支持 Windows".into())
+    }
+}
+
+#[tauri::command]
+fn set_explorer_context_menu(enable: bool) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let key = r"HKCU\Software\Classes\*\shell\HiEditor";
+        // 用户级注册表（HKCU），无需管理员权限；reg.exe 参数经 CreateProcessW 传递，无 shell 注入面
+        let run = |args: &[&str]| -> Result<(), String> {
+            let out = std::process::Command::new("reg")
+                .args(args)
+                .creation_flags(CREATE_NO_WINDOW)
+                .output()
+                .map_err(|e| format!("执行失败：{e}"))?;
+            if out.status.success() {
+                Ok(())
+            } else {
+                Err(String::from_utf8_lossy(&out.stderr).trim().to_string())
+            }
+        };
+        if enable {
+            let exe_str = exe.to_string_lossy().into_owned();
+            run(&["add", key, "/ve", "/t", "REG_SZ", "/d", "用 HiEditor 编辑", "/f"])?;
+            run(&["add", key, "/v", "Icon", "/t", "REG_SZ", "/d", &exe_str, "/f"])?;
+            let cmd = format!("\"{exe_str}\" \"%1\"");
+            run(&[
+                "add",
+                &format!("{key}\\command"),
+                "/ve",
+                "/t",
+                "REG_SZ",
+                "/d",
+                &cmd,
+                "/f",
+            ])?;
+        } else {
+            // 键不存在时忽略错误
+            let _ = run(&["delete", key, "/f"]);
+        }
+        Ok(())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = enable;
+        Err("此功能当前仅支持 Windows".into())
+    }
+}
+
+#[tauri::command]
+fn explorer_context_menu_enabled() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        std::process::Command::new("reg")
+            .args(["query", r"HKCU\Software\Classes\*\shell\HiEditor"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        false
+    }
+}
+
+#[tauri::command]
+fn take_launch_file(lf: State<LaunchFile>) -> Option<String> {
+    lf.0.lock().unwrap().take()
+}
+
+#[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
     // 白名单校验，防止经 start/xdg-open 注入参数。
     if !url.starts_with("https://") || url.chars().any(|c| c.is_whitespace() || c == '"') {
@@ -400,12 +513,80 @@ fn print_text(app: tauri::AppHandle, title: String, text: String) -> Result<Stri
     }
 }
 
+/// 从环境变量解析应用设置文件路径（main 阶段尚无 AppHandle，按 Tauri 惯例目录推导）
+fn settings_file_from_env() -> Option<PathBuf> {
+    #[cfg(target_os = "windows")]
+    {
+        std::env::var("APPDATA")
+            .ok()
+            .map(|d| PathBuf::from(d).join("com.hieditor.app").join("settings.json"))
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::env::var("HOME").ok().map(|h| {
+            PathBuf::from(h)
+                .join("Library/Application Support/com.hieditor.app/settings.json")
+        })
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::env::var("XDG_CONFIG_HOME")
+            .ok()
+            .or_else(|| std::env::var("HOME").ok().map(|h| format!("{h}/.config")))
+            .map(|d| PathBuf::from(d).join("com.hieditor.app/settings.json"))
+    }
+}
+
 fn main() {
+    // 右键“用 HiEditor 编辑”入口：命令行携带的待打开文件路径
+    let launch_file = std::env::args().nth(1).filter(|a| {
+        !a.starts_with('-') && std::path::Path::new(a).is_file()
+    });
+
+    // 设置开关“记住窗口大小”（settings.remember_window）：
+    // 开启时窗口状态插件按上次关闭的大小/位置恢复；关闭时始终按 tauri.conf.json 默认尺寸打开
+    let remember_window = settings_file_from_env()
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        .and_then(|v| v.get("remember_window").and_then(|b| b.as_bool()))
+        .unwrap_or(false);
+    let mut state_flags =
+        tauri_plugin_window_state::StateFlags::all();
+    if !remember_window {
+        state_flags.remove(
+            tauri_plugin_window_state::StateFlags::SIZE
+                | tauri_plugin_window_state::StateFlags::POSITION
+                | tauri_plugin_window_state::StateFlags::MAXIMIZED,
+        );
+    }
+
     tauri::Builder::default()
+        // 窗口尺寸/位置/最大化状态记忆：关闭时自动保存，启动时按开关恢复
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(state_flags)
+                .build(),
+        )
+        // 单实例：已运行时唤起主实例并把新实例的文件参数转发过去（FR-2.10）
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            // 任务栏最小化状态下被二次启动 → 还原并前置窗口
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.unminimize();
+                let _ = win.set_focus();
+            }
+            if let Some(path) = argv.iter().skip(1).find(|a| {
+                !a.starts_with('-') && std::path::Path::new(a).is_file()
+            }) {
+                let state = app.state::<LaunchFile>();
+                *state.0.lock().unwrap() = Some(path.clone());
+                let _ = app.emit("open-file-request", path.clone());
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
-        .setup(|app| {
+        .setup(move |app| {
             let host = init_host(app.handle());
             app.manage(HostCell(Mutex::new(host)));
+            app.manage(LaunchFile(Mutex::new(launch_file)));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -421,6 +602,10 @@ fn main() {
             save_session,
             open_url,
             reveal_path,
+            create_desktop_shortcut,
+            set_explorer_context_menu,
+            explorer_context_menu_enabled,
+            take_launch_file,
             print_text
         ])
         .run(tauri::generate_context!())

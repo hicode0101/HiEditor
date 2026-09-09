@@ -59,6 +59,28 @@ async function boot() {
     switchTab(tab.id);
   }
 
+  // 右键“用 HiEditor 编辑”冷启动入口：打开命令行携带的文件（FR-2.10）
+  try {
+    const launchFile = await invoke("take_launch_file");
+    if (launchFile) await openPath(launchFile);
+  } catch (e) { /* 无启动参数 */ }
+
+  // 第二实例转发：已运行时右键打开文件 → 主实例内打开该文件
+  try {
+    if (window.__TAURI__.event) {
+      window.__TAURI__.event.listen("open-file-request", async (e) => {
+        if (e.payload) await openPath(e.payload);
+      });
+    }
+  } catch (err) { /* 事件 API 不可用时忽略 */ }
+
+  // 右键菜单自愈：已启用时随启动静默刷新注册表中的 exe 路径与菜单文案
+  try {
+    if (await invoke("explorer_context_menu_enabled")) {
+      await invoke("set_explorer_context_menu", { enable: true });
+    }
+  } catch (err) { /* 非 Windows 平台 */ }
+
   initFontControls();
   bindGlobalKeys();
   bindEditorEvents();
