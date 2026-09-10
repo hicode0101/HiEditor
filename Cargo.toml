@@ -10,6 +10,8 @@ members = [
     "plugins/markdown",
     "plugins/notepad",
     "plugins/txt",
+    "plugins/pdf",
+    "crates/hieditor-shellmenu",
     "plugins/code",
 ]
 

@@ -6,7 +6,8 @@ import { initMenus, initEditorContextMenu } from "./menus.js";
 import { initToolbars, updateToolbarOverflow } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
-import { initMarkdownPreview, applyMarkdownMode } from "./mdpreview.js";
+import { initMarkdownPreview, renderMdPreview } from "./mdpreview.js";
+import { initPdfViewer, isPdfTab, renderPdfTab } from "./pdfviewer.js";
 import { syncTabBanner } from "./ui.js";
 import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
 import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance, openFind, openReplace } from "./editor.js";
@@ -30,6 +31,7 @@ async function boot() {
   initStatusbar();
   initEditorContextMenu();
   initMarkdownPreview();
+  initPdfViewer();
 
   state.registry = await invoke("get_registry");
   state.settings = await invoke("get_settings");
@@ -55,11 +57,6 @@ async function boot() {
 
   // 会话恢复（FR-10.2）：恢复上次退出/崩溃时的标签（含未保存内容）
   const restored = await restoreSession();
-  if (!restored) {
-    const tab = newTabModel({ lang: state.settings.new_tab_language || "plaintext" });
-    state.tabs.push(tab);
-    switchTab(tab.id);
-  }
 
   // 右键“用 HiEditor 编辑”冷启动入口：打开命令行携带的文件（FR-2.10）
   try {
@@ -83,11 +80,18 @@ async function boot() {
     }
   } catch (err) { /* 非 Windows 平台 */ }
 
-  initFontControls();
+  // 启动兜底（v1.7）：没有任何标签时自动新建一个空的纯文本标签（类型走 new_tab_language 设置）
+  if (!state.tabs.length) {
+    const tab = newTabModel({ lang: state.settings.new_tab_language || "plaintext" });
+    state.tabs.push(tab);
+    switchTab(tab.id);
+  }
+
+  await initFontControls(); // await：注入 fonts/ 用户字体到下拉
   bindGlobalKeys();
   bindEditorEvents();
   switchToolbar(); // 补一次同步：修复恢复/首建标签时工具栏状态未刷新
-  applyMarkdownMode();
+  syncContentView();
   await initDragDrop();
   syncCaptionGlyph();
   setInterval(() => flushSession(), 30000); // 30 秒兜底（FR-10.3）
@@ -249,7 +253,7 @@ function bindGlobalKeys() {
   window.addEventListener("zoom", (e) => zoom(e.detail));
   window.addEventListener("toggle-wrap", toggleWrap);
   window.addEventListener("request-save", saveActive);
-  const syncTabUi = () => { switchToolbar(); syncTabBanner(); applyMarkdownMode(); }; // 切标签：工具栏 + 标签横幅 + md 预览一并同步
+  const syncTabUi = () => { switchToolbar(); syncTabBanner(); syncContentView(); }; // 切标签：工具栏 + 标签横幅 + 内容视图一并同步
   window.addEventListener("tab-switched", syncTabUi);
   window.addEventListener("tabs-refresh", syncTabUi);
   window.addEventListener("settings-changed", switchToolbar);
@@ -264,6 +268,24 @@ function zoom(delta) {
   const current = getZoomSafe();
   const next = delta === 0 ? 100 : Math.max(30, Math.min(500, current + delta));
   setZoom(next);
+}
+
+// 内容视图统一仲裁（v1.7）：编辑区 / md 预览 / pdf 查看三选一
+function syncContentView() {
+  const tab = activeTab();
+  const isPdf = isPdfTab(tab);
+  const isMd = !!(tab && tab.lang === "markdown");
+  const mdPreview = isMd && tab.mode === "wysiwyg";
+  document.getElementById("editor").hidden = isPdf || mdPreview;
+  document.getElementById("md-bar").hidden = !isMd;
+  document.getElementById("md-preview").hidden = !(isMd && mdPreview);
+  document.getElementById("pdf-bar").hidden = !isPdf;
+  document.getElementById("pdf-view").hidden = !isPdf;
+  if (isMd && mdPreview) {
+    import("./mdpreview.js").then((m) => m.renderMdPreview());
+  } else if (isPdf) {
+    import("./pdfviewer.js").then((m) => m.renderPdfTab());
+  }
 }
 
 function getZoomSafe() {
@@ -319,7 +341,26 @@ function handleCmUpdate(u) {
   if (u.selectionSet || u.docChanged) updateStatus();
 }
 
-function initFontControls() {
+// 用户字体目录（exe 同级 fonts/）：枚举 + @font-face 注入，字体下拉追加选项（v1.7）
+async function loadUserFonts() {
+  try {
+    const fonts = await invoke("list_user_fonts");
+    if (!fonts.length) return;
+    const style = document.createElement("style");
+    style.id = "user-fonts";
+    style.textContent = fonts
+      .map(
+        (f) =>
+          `@font-face { font-family: "uf-${f.name.replace(/"/g, "")}"; src: url("http://font.localhost/${encodeURIComponent(f.file)}"); }`
+      )
+      .join("\n");
+    document.head.appendChild(style);
+    window.__userFonts = fonts;
+    return fonts; // initFontControls 追加下拉选项用
+  } catch (e) { /* 字体加载失败不影响主流程 */ }
+}
+
+async function initFontControls() {
   const fam = document.getElementById("tl-font-family");
   const fonts = [
     ["", "默认字体"],
@@ -330,6 +371,12 @@ function initFontControls() {
     ["Microsoft YaHei", "微软雅黑"],
     ["Arial", "Arial"],
   ];
+  // fonts/ 目录用户字体追加到静态列表之后（v1.7，family = "uf-<文件名>"）
+  try {
+    for (const f of await loadUserFonts()) {
+      fonts.push(["uf-" + f.name, f.name]);
+    }
+  } catch (e) { /* 枚举失败只用静态列表 */ }
   for (const [v, label] of fonts) {
     const opt = document.createElement("option");
     opt.value = v;

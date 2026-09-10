@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use hi_editor_core::{encoding as enc, eol, settings};
+use hieditor_shellmenu as shellmenu;
 use hi_editor_plugin::host::{PluginHost, PluginStatus};
 use hi_editor_plugin::manifest::Manifest;
 use serde::Serialize;
@@ -456,6 +457,112 @@ fn take_launch_file(lf: State<LaunchFile>) -> Option<String> {
     lf.0.lock().unwrap().take()
 }
 
+// Win11 前排右键菜单：稀疏 MSIX 注册/注销（Add-AppxPackage -Register 免签名开发模式）
+fn ps_run(script: &str) -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let out = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+            .map_err(|e| format!("PowerShell 执行失败：{e}"))?;
+        let text = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        if out.status.success() {
+            Ok(text)
+        } else {
+            Err(String::from_utf8_lossy(&out.stderr).trim().to_string())
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = script;
+        Err("此功能当前仅支持 Windows".into())
+    }
+}
+
+#[cfg(windows)]
+fn deploy_win11_menu_files() -> Result<std::path::PathBuf, String> {
+    use std::path::PathBuf;
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    let dir = exe.parent().ok_or("无父目录")?.to_path_buf();
+    // 1. 清单（含同目录 DLL/图标引用）
+    std::fs::write(
+        dir.join(shellmenu::MANIFEST_FILE),
+        shellmenu::MANIFEST_XML,
+    )
+    .map_err(|e| e.to_string())?;
+    // 2. COM DLL（开发期位于 target/release，打包后随包附带）
+    let dll_src = std::path::Path::new("target/release").join(shellmenu::SHELLMENU_DLL);
+    if dll_src.exists() {
+        std::fs::copy(&dll_src, dir.join(shellmenu::SHELLMENU_DLL))
+            .map_err(|e| format!("复制 DLL 失败：{e}"))?;
+    } else if !dir.join(shellmenu::SHELLMENU_DLL).exists() {
+        return Err(format!("未找到 {}", shellmenu::SHELLMENU_DLL));
+    }
+    // 3. 清单引用的 logo
+    std::fs::write(dir.join("hi-editor.png"), shellmenu::LOGO_PNG)
+        .map_err(|e| e.to_string())?;
+    Ok(dir)
+}
+
+#[tauri::command]
+fn register_win11_context_menu() -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        let dir = deploy_win11_menu_files()?;
+        let dir_s = dir.to_string_lossy().replace('\'', "''");
+        let manifest = dir.join(shellmenu::MANIFEST_FILE);
+        let manifest_s = manifest.to_string_lossy().replace('\'', "''");
+        ps_run(&format!(
+            "Add-AppxPackage -Register '{manifest_s}' -ExternalLocation '{dir_s}'"
+        ))?;
+        Ok(())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("此功能当前仅支持 Windows".into())
+    }
+}
+
+#[tauri::command]
+fn unregister_win11_context_menu() -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        ps_run("Get-AppxPackage HiEditor.ShellMenu | Remove-AppxPackage")?;
+        Ok(())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("此功能当前仅支持 Windows".into())
+    }
+}
+
+#[tauri::command]
+fn win11_context_menu_registered() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        ps_run("if (Get-AppxPackage HiEditor.ShellMenu) { '1' } else { '0' }")
+            .map(|s| s == "1")
+            .unwrap_or(false)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        false
+    }
+}
+
+#[tauri::command]
+fn read_binary_file(path: String) -> Result<tauri::ipc::Response, String> {
+    let trimmed = path.trim();
+    if trimmed.is_empty() || trimmed.contains('"') {
+        return Err("非法的路径".into());
+    }
+    let bytes = std::fs::read(trimmed).map_err(|e| format!("读取失败：{e}"))?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
 #[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
     // 白名单校验，防止经 start/xdg-open 注入参数。
@@ -537,6 +644,75 @@ fn settings_file_from_env() -> Option<PathBuf> {
     }
 }
 
+/// 用户字体目录（exe 同级 fonts/，不存在自动创建）
+fn fonts_dir() -> PathBuf {
+    let dir = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+        .unwrap_or_default()
+        .join("fonts");
+    let _ = std::fs::create_dir_all(&dir);
+    dir
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UserFont {
+    name: String, // 展示名（文件名去扩展名），同时作为 @font-face family（前缀 uf-）
+    file: String, // 实际文件名（含扩展名），用于协议 URL
+}
+
+#[tauri::command]
+fn list_user_fonts() -> Vec<UserFont> {
+    let dir = fonts_dir();
+    let mut fonts: Vec<UserFont> = std::fs::read_dir(&dir)
+        .map(|rd| {
+            rd.filter_map(|e| e.ok())
+                .filter_map(|e| {
+                    let p = e.path();
+                    let ext = p.extension()?.to_string_lossy().to_lowercase();
+                    if matches!(ext.as_str(), "ttf" | "otf" | "ttc") {
+                        Some(UserFont {
+                            name: p.file_stem()?.to_string_lossy().into_owned(),
+                            file: p.file_name()?.to_string_lossy().into_owned(),
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    fonts.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    fonts
+}
+
+fn percent_decode(s: &str) -> String {
+    let b = s.as_bytes();
+    let mut out: Vec<u8> = Vec::with_capacity(b.len());
+    let mut i = 0;
+    let hex = |c: u8| -> Option<u8> {
+        match c {
+            b'0'..=b'9' => Some(c - b'0'),
+            b'a'..=b'f' => Some(c - b'a' + 10),
+            b'A'..=b'F' => Some(c - b'A' + 10),
+            _ => None,
+        }
+    };
+    while i < b.len() {
+        if b[i] == b'%' && i + 2 < b.len() {
+            if let (Some(h), Some(l)) = (hex(b[i + 1]), hex(b[i + 2])) {
+                out.push(h * 16 + l);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(b[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
 fn main() {
     // 右键“用 HiEditor 编辑”入口：命令行携带的待打开文件路径
     let launch_file = std::env::args().nth(1).filter(|a| {
@@ -561,6 +737,35 @@ fn main() {
     }
 
     tauri::Builder::default()
+        // 字体协议：伺服 fonts/ 目录下的字体文件（前端 @font-face 引用，用户字体随目录增删）
+        .register_uri_scheme_protocol("font", |_ctx, request| {
+            let respond =
+                |status: u16, mime: &str, body: Vec<u8>| -> tauri::http::Response<Vec<u8>> {
+                    tauri::http::Response::builder()
+                        .status(status)
+                        .header("Content-Type", mime)
+                        .header("Access-Control-Allow-Origin", "*")
+                        .body(body)
+                        .unwrap()
+                };
+            let raw = request.uri().path().trim_start_matches('/');
+            let name = percent_decode(raw);
+            if name.is_empty() || name.contains("..") || name.contains('/') || name.contains('\\') {
+                return respond(403, "text/plain", b"forbidden".to_vec());
+            }
+            let full = fonts_dir().join(&name);
+            match std::fs::read(&full) {
+                Ok(bytes) => {
+                    let mime = match full.extension().and_then(|e| e.to_str()).map(|s| s.to_lowercase()).as_deref() {
+                        Some("otf") => "font/otf",
+                        Some("ttc") => "font/collection",
+                        _ => "font/ttf",
+                    };
+                    respond(200, mime, bytes)
+                }
+                Err(_) => respond(404, "text/plain", b"not found".to_vec()),
+            }
+        })
         // 窗口尺寸/位置/最大化状态记忆：关闭时自动保存，启动时按开关恢复
         .plugin(
             tauri_plugin_window_state::Builder::default()
@@ -600,12 +805,18 @@ fn main() {
             set_plugin_enabled,
             load_session,
             save_session,
+            read_binary_file,
+            read_binary_file,
             open_url,
             reveal_path,
             create_desktop_shortcut,
             set_explorer_context_menu,
             explorer_context_menu_enabled,
+            list_user_fonts,
             take_launch_file,
+            register_win11_context_menu,
+            unregister_win11_context_menu,
+            win11_context_menu_registered,
             print_text
         ])
         .run(tauri::generate_context!())

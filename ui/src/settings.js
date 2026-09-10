@@ -163,6 +163,19 @@ function createShortcutButton() {
 }
 
 // 资源管理器右键菜单开关（Windows）：写入/删除 HKCU 用户级注册表
+// Win11 前排右键菜单开关（稀疏 MSIX 注册/注销）
+function win11MenuSwitch(enabled) {
+  const sw = switchControl(enabled, async (on) => {
+    try {
+      await invoke(on ? "register_win11_context_menu" : "unregister_win11_context_menu");
+    } catch (e) {
+      sw.classList.toggle("on", !on);
+      showDialog({ title: t("settings.opFailed"), body: String(e) });
+    }
+  });
+  return sw;
+}
+
 function contextMenuSwitch(enabled) {
   const sw = switchControl(enabled, async (on) => {
     try {
@@ -235,6 +248,12 @@ async function renderSettingsItems(panel, category) {
         { label: t("settings.contextMenu"), desc: t("settings.contextMenu.desc") },
         contextMenuSwitch(ctxEnabled)
       ),
+      // Win11 前排菜单（稀疏 MSIX）：基础设施已就绪，但注册 API 在部分 Win11 版本
+      // 返回 E_INVALIDARG，待专项调试后再开放此开关
+      // item(
+      //   { label: t("settings.win11Menu"), desc: t("settings.win11Menu.desc") },
+      //   win11MenuSwitch(win11Registered)
+      // ),
     ],
     markdown: [
       item({ label: t("settings.mdMode"), desc: t("settings.mdMode.desc") }, selectControl(s.markdown_mode, [["wysiwyg", t("settings.mdMode.wysiwyg")], ["source", t("settings.mdMode.source")]], (v) => { s.markdown_mode = v; persist(); })),

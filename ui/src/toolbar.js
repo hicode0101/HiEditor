@@ -298,7 +298,7 @@ function bindTablePicker(btn) {
 
 function insertTable(rows, cols) {
   if (rows < 1 || cols < 1) return;
-  const header = "| " + Array.from({ length: cols }, (_, i) => `${i18n_t("toolbar.tableCol", { n: i + 1 })}`).join(" | ") + " |";
+  const header = "| " + Array.from({ length: cols }, (_, i) => `${t("toolbar.tableCol", { n: i + 1 })}`).join(" | ") + " |";
   const divider = "| " + Array.from({ length: cols }, () => "---").join(" | ") + " |";
   const body = Array.from({ length: rows - 1 }, () =>
     "|" + Array.from({ length: cols }, () => "  ").join("|") + "|"

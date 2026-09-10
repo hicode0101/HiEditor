@@ -1504,6 +1504,7 @@ version = "0.1.0"
 dependencies = [
  "hi-editor-core",
  "hi-editor-plugin",
+ "hieditor-shellmenu",
  "serde",
  "serde_json",
  "tauri",
@@ -1569,6 +1570,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "hi-plugin-pdf"
+version = "0.1.0"
+dependencies = [
+ "hi-editor-plugin-abi",
+]
+
+[[package]]
 name = "hi-plugin-txt"
 version = "0.1.0"
 dependencies = [
@@ -1581,6 +1589,14 @@ version = "0.1.0"
 dependencies = [
  "hi-editor-plugin-abi",
  "quick-xml 0.37.5",
+]
+
+[[package]]
+name = "hieditor-shellmenu"
+version = "0.1.0"
+dependencies = [
+ "windows 0.58.0",
+ "windows-core 0.58.0",
 ]
 
 [[package]]

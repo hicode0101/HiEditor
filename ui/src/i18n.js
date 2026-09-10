@@ -199,6 +199,8 @@ const ZH = {
   "settings.contextMenu": "文件右键菜单",
   "settings.contextMenu.desc": "在资源管理器中右键文件时显示“用 HiEditor 编辑”（当前用户级，无需管理员权限）",
   "settings.opFailed": "操作失败",
+  "settings.win11Menu": "Win11 前排右键菜单",
+  "settings.win11Menu.desc": "将“用 HiEditor 编辑”注册进 Windows 11 新版右键菜单前排（稀疏 MSIX 方式，当前用户级，首次注册需数秒）",
   "settings.confirmClose": "关闭未保存标签时提醒",
   "settings.confirmClose.desc": "关闭后静默保留在会话中，重启时仍可找回",
 
@@ -425,6 +427,8 @@ const EN = {
   "settings.contextMenu": "Explorer context menu",
   "settings.contextMenu.desc": "Show \"Edit with HiEditor\" when right-clicking files in Explorer (current user, no admin required)",
   "settings.opFailed": "Operation failed",
+  "settings.win11Menu": "Win11 front-row context menu",
+  "settings.win11Menu.desc": "Register \"Edit with HiEditor\" in the Windows 11 modern context menu (sparse MSIX, per-user, first registration takes a few seconds)",
   "settings.confirmClose": "Confirm Before Closing Unsaved Tabs",
   "settings.confirmClose.desc": "When off, unsaved tabs are kept silently in the session and can be found after restart",
 

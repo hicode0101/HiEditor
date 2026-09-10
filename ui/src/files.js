@@ -50,6 +50,21 @@ export async function openPath(path, { activate = true } = {}) {
     if (activate) switchTab(existing.id);
     return existing;
   }
+  // PDF（v1.7）：二进制走 pdf.js 查看器，不经文本解码
+  if (path.toLowerCase().endsWith(".pdf")) {
+    addRecent(path);
+    const tab = newTabModel({
+      title: basename(path),
+      path,
+      lang: "pdf",
+    });
+    state.tabs.push(tab);
+    if (activate) switchTab(tab.id);
+    else refreshTabs();
+    window.dispatchEvent(new CustomEvent("tab-updated", { detail: tab.id }));
+    scheduleSessionSave();
+    return tab;
+  }
   const out = await invoke("read_file", { path });
   addRecent(path);
   const tab = newTabModel({
@@ -89,6 +104,7 @@ export function newTab() {
 }
 
 export async function saveTab(tab, { as = false } = {}) {
+  if (tab.lang === "pdf") return false; // PDF 只读，不提供保存
   persistActiveFromEditor();
   let path = tab.path;
   if (!path || as) {

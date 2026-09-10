@@ -1,5 +1,7 @@
 // 全局状态：标签页（文档缓冲区）+ 插件注册表 + 设置（FR-1.8 每标签独立状态）
 
+import { t as i18n_t } from "./i18n.js"; // 修复 v1.7：此前 i18n_t 未定义，关闭会话恢复时新建空标签抛 ReferenceError 中断 boot
+
 export const state = {
   tabs: [],
   activeId: null,

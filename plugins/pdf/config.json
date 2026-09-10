@@ -1,0 +1,17 @@
+{
+  "id": "hieditor.pdf",
+  "name": "PDF 阅读",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "enabled": true,
+  "author": "HiEditor",
+  "description": "PDF 文件只读查看（pdf.js 渲染，支持缩放与文字选择复制）",
+  "entry": {
+    "windows": "bin/hieditor_pdf.dll",
+    "linux": "bin/hieditor_pdf.so",
+    "macos": "bin/hieditor_pdf.dylib"
+  },
+  "languages": [
+    { "id": "pdf", "name": "PDF", "extensions": [".pdf"], "highlight": false }
+  ]
+}
