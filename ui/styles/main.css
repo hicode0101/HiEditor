@@ -438,10 +438,26 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   border-bottom: 1px solid var(--row-divider);
 }
 #pdf-bar[hidden] { display: none; }
-.pdf-info { font-size: 13px; color: var(--text-secondary); }
 .pdf-sep { width: 1px; height: 18px; background: var(--row-divider); }
+.pdf-page-input {
+  width: 44px; height: 26px;
+  text-align: center;
+  font-size: 13px;
+  border: 1px solid var(--dialog-btn-border);
+  border-radius: 4px;
+  background: var(--dialog-btn-bg);
+  color: var(--text-primary);
+  outline: none;
+}
+.pdf-page-input:focus { border-color: var(--accent); }
+.pdf-page-total { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+.pdf-zoom-level { min-width: 46px; text-align: center; font-size: 13px; color: var(--text-primary); user-select: none; }
 .pdf-zbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 28px; height: 28px;
+  flex: 0 0 auto;
   border-radius: 4px;
   border: 1px solid var(--dialog-btn-border);
   background: var(--dialog-btn-bg);
@@ -450,6 +466,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   line-height: 1;
   cursor: pointer;
 }
+.pdf-zbtn svg { display: block; }
 .pdf-zbtn:hover { background: var(--light-hover); }
 #pdf-view {
   flex: 1;

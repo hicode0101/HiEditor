@@ -7,7 +7,7 @@ import { initToolbars, updateToolbarOverflow } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
 import { initMarkdownPreview, renderMdPreview } from "./mdpreview.js";
-import { initPdfViewer, isPdfTab, renderPdfTab } from "./pdfviewer.js";
+import { initPdfViewer, isPdfTab, renderPdfTab, zoomPdf, resetPdfZoom } from "./pdfviewer.js";
 import { syncTabBanner } from "./ui.js";
 import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
 import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance, openFind, openReplace } from "./editor.js";
@@ -209,8 +209,8 @@ function switchToolbar() {
     if (el.id === "toolbar-font") return; // 默认栏最后统一处理
     el.hidden = el !== custom;
   });
-  // 默认工具栏：仅 字体/字号（适用于未声明自定义工具栏的所有语言）
-  document.getElementById("toolbar-font").hidden = !!custom;
+  // 默认工具栏：仅 字体/字号（PDF 标签整个隐藏，查看器有自己的 pdf-bar）
+  document.getElementById("toolbar-font").hidden = !!custom || isPdfTab(tab);
   syncFontControls();
   applyTabFont();
   updateToolbarOverflow(); // 容器切换后重测溢出收纳
@@ -231,9 +231,9 @@ function bindGlobalKeys() {
     else if (ctrl && !e.shiftKey && key === "f") { e.preventDefault(); openFind(); } // 搜索菜单（FR-4）
     else if (ctrl && !e.shiftKey && key === "h") { e.preventDefault(); openReplace(); }
     else if (ctrl && !e.shiftKey && key === "w") { e.preventDefault(); const t = activeTab(); if (t) closeTab(t.id); }
-    else if (ctrl && (key === "=" || key === "+")) { e.preventDefault(); zoom(10); }
-    else if (ctrl && key === "-") { e.preventDefault(); zoom(-10); }
-    else if (ctrl && key === "0") { e.preventDefault(); zoom(0); }
+    else if (ctrl && (key === "=" || key === "+")) { e.preventDefault(); isPdfTab(activeTab()) ? zoomPdf(0.2) : zoom(10); }
+    else if (ctrl && key === "-") { e.preventDefault(); isPdfTab(activeTab()) ? zoomPdf(-0.2) : zoom(-10); }
+    else if (ctrl && key === "0") { e.preventDefault(); isPdfTab(activeTab()) ? resetPdfZoom() : zoom(0); }
     else if (e.altKey && key === "z") { e.preventDefault(); toggleWrap(); }
     else if (key === "f5") { e.preventDefault(); insertTimeDate(); }
     else if (ctrl && e.shiftKey && key === "j") { e.preventDefault(); runFormatterById("json.pretty"); }
@@ -244,6 +244,7 @@ function bindGlobalKeys() {
 
   document.addEventListener("wheel", (e) => {
     if (state.settingsOpen) return; // 模态打开时缩放快捷滚轮不作用于遮罩下的编辑器
+    if (isPdfTab(activeTab())) return; // PDF 标签：Ctrl+滚轮由 pdf-view 自己处理（缩放页面而非编辑器）
     if (e.ctrlKey) {
       e.preventDefault();
       zoom(e.deltaY < 0 ? 5 : -5);
@@ -281,6 +282,7 @@ function syncContentView() {
   document.getElementById("md-preview").hidden = !(isMd && mdPreview);
   document.getElementById("pdf-bar").hidden = !isPdf;
   document.getElementById("pdf-view").hidden = !isPdf;
+  document.getElementById("statusbar").hidden = isPdf; // PDF 只读：行/列、语言、编码均无意义
   if (isMd && mdPreview) {
     import("./mdpreview.js").then((m) => m.renderMdPreview());
   } else if (isPdf) {
