@@ -221,7 +221,7 @@ const ZH = {
 
   "tab.menu.openFolder": "打开所在文件夹",
   "tab.menu.copyDir": "复制当前目录路径",
-  "tab.menu.copyPath": "复制当前完整路径",
+  "tab.menu.copyPath": "复制当前文件路径",
   "banner.copied": "已复制到剪贴板",
 
   "openError.title": "打开失败",
@@ -447,7 +447,7 @@ const EN = {
 
   "tab.menu.openFolder": "Open Containing Folder",
   "tab.menu.copyDir": "Copy Directory Path",
-  "tab.menu.copyPath": "Copy Full Path",
+  "tab.menu.copyPath": "Copy File Path",
   "banner.copied": "Copied to clipboard",
 
   "openError.title": "Open Failed",
