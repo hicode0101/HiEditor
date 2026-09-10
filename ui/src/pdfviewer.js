@@ -69,6 +69,7 @@ export async function renderPdfTab() {
   view.innerHTML = "";
   view.dataset.tabId = String(tab.id);
   setupPageObserver(view);
+  syncPdfBar(tab); // 文档信息就绪：立即重置页码/缩放/翻页按钮，避免残留上一个标签的状态
   for (let n = 1; n <= doc.numPages; n++) {
     if (seq !== renderSeq || activeTab() !== tab) return; // 缩放/切走：中止，重入时重建
     await renderPage(tab, doc, n);
@@ -117,7 +118,7 @@ async function renderPage(tab, doc, n) {
   syncPdfBar(tab);
 }
 
-// 工具栏信息同步：当前页 / 总页数 / 缩放百分比
+// 工具栏信息同步：当前页 / 总页数 / 缩放百分比 / 翻页按钮可用态
 function syncPdfBar(tab) {
   if (!isPdfTab(tab) || !tab.pdfDoc || activeTab() !== tab) return;
   const total = document.getElementById("pdf-page-total");
@@ -129,6 +130,21 @@ function syncPdfBar(tab) {
     const cur = String(tab.pdfCurrentPage || 1);
     if (input.value !== cur) input.value = cur;
   }
+  updatePdfNav(tab);
+}
+
+// 上一页/下一页按钮：第一页/最后一页时置灰不可点
+function updatePdfNav(tab) {
+  const prev = document.getElementById("pdf-prev-page");
+  const next = document.getElementById("pdf-next-page");
+  if (!prev && !next) return;
+  if (!isPdfTab(tab) || !tab.pdfDoc) {
+    prev.disabled = next.disabled = true;
+    return;
+  }
+  const cur = tab.pdfCurrentPage || 1;
+  prev.disabled = cur <= 1;
+  next.disabled = cur >= tab.pdfDoc.numPages;
 }
 
 // 滚动跟踪当前页：取可视比例最大的页写回输入框
@@ -149,6 +165,7 @@ function setupPageObserver(view) {
       tab.pdfCurrentPage = n;
       const input = document.getElementById("pdf-page-input");
       if (input && document.activeElement !== input) input.value = String(n);
+      updatePdfNav(tab);
     },
     { root: view, threshold: [0, 0.25, 0.5, 0.75, 1] }
   );
@@ -204,11 +221,21 @@ export function goToPage(n) {
     tab.pdfPendingPage = n; // 该页尚未渲染完，renderPage 完成后补跳
   }
   syncPdfBar(tab);
+  // 边界页上 observer 可能不再回调（无滚动变化），翻页按钮状态在此兜底刷新
+  updatePdfNav(tab);
 }
 
 export function initPdfViewer() {
   document.getElementById("pdf-zoom-out").addEventListener("click", () => zoomPdf(-0.2));
   document.getElementById("pdf-zoom-in").addEventListener("click", () => zoomPdf(0.2));
+  document.getElementById("pdf-prev-page").addEventListener("click", () => {
+    const tab = activeTab();
+    if (isPdfTab(tab)) goToPage((tab.pdfCurrentPage || 1) - 1);
+  });
+  document.getElementById("pdf-next-page").addEventListener("click", () => {
+    const tab = activeTab();
+    if (isPdfTab(tab)) goToPage((tab.pdfCurrentPage || 1) + 1);
+  });
   document.getElementById("pdf-fit-page").addEventListener("click", () => fitPdfPage());
   document.getElementById("pdf-fit-width").addEventListener("click", () => fitPdfWidth());
   const input = document.getElementById("pdf-page-input");

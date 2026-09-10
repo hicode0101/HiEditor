@@ -5,6 +5,7 @@ import { loadActiveIntoEditor, persistActiveFromEditor } from "./editor.js";
 import { showDialog, syncTabBanner } from "./ui.js";
 import { scheduleSessionSave } from "./session.js";
 import { t } from "./i18n.js";
+import { APP_NAME } from "./constants.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -122,7 +123,7 @@ export async function saveTab(tab, { as = false } = {}) {
   tab.title = basename(path);
   tab.dirty = false;
   addRecent(path);
-  document.title = `${tab.title} - HiEditor`;
+  document.title = `${tab.title} - ${APP_NAME}`;
   if (!tab.lang || tab.lang === "plaintext") tab.lang = langForPath(path);
   refreshTabs();
   scheduleSessionSave();
@@ -225,7 +226,7 @@ export function switchTab(id) {
   persistActiveFromEditor();
   state.activeId = id;
   const tab = activeTab();
-  document.title = `${tab.path ? tab.title : tab.title}${tab.dirty ? " *" : ""} - HiEditor`;
+  document.title = `${tab.path ? tab.title : tab.title}${tab.dirty ? " *" : ""} - ${APP_NAME}`;
   loadActiveIntoEditor();
   refreshTabs();
   window.dispatchEvent(new CustomEvent("tab-switched", { detail: id }));

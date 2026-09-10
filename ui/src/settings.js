@@ -5,6 +5,7 @@ import { showDialog } from "./ui.js";
 import { ICONS } from "./icons.js";
 import { t } from "./i18n.js";
 import { setLanguage as i18nSetLanguage, applyI18n } from "./i18n.js";
+import { APP_NAME_VERSION } from "./constants.js";
 import { applyTheme } from "./theme.js";
 import { setEditorDark } from "./editor.js";
 
@@ -269,7 +270,7 @@ async function renderSettingsItems(panel, category) {
   if (category === "about") {
     const info = document.createElement("div");
     info.style.cssText = "font-size:13px;color:var(--text-secondary);line-height:2";
-    info.textContent = "HiEditor 1.0.0 — " + t("about.desc");
+    info.textContent = APP_NAME_VERSION + " — " + t("about.desc");
     panel.appendChild(info);
   }
   if (category === "about") renderAbout(panel);

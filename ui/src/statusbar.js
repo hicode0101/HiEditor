@@ -27,6 +27,7 @@ function languageItems() {
   });
   const items = priority.map(item);
   for (const l of state.registry.languages) {
+    if (l.id === "pdf") continue; // PDF 是只读查看器，不是高亮语言，不进列表
     if (!priority.includes(l.id)) items.push(item(l.id));
   }
   return [
@@ -42,7 +43,7 @@ function autoDetect(tab) {
     const dot = tab.path.lastIndexOf(".");
     const ext = dot >= 0 ? tab.path.slice(dot).toLowerCase() : "";
     const hit = state.registry.languages.find((l) => l.extensions.some((e) => e.toLowerCase() === ext));
-    return hit ? hit.id : "plaintext";
+    return hit && hit.id !== "pdf" ? hit.id : "plaintext"; // pdf 走只读查看器，不当高亮语言
   }
   return "plaintext";
 }

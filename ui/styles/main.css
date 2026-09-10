@@ -468,6 +468,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 }
 .pdf-zbtn svg { display: block; }
 .pdf-zbtn:hover { background: var(--light-hover); }
+.pdf-zbtn:disabled { opacity: 0.4; cursor: default; }
+.pdf-zbtn:disabled:hover { background: var(--dialog-btn-bg); }
 #pdf-view {
   flex: 1;
   min-height: 0;
@@ -769,6 +771,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   font-size: 12px;
   overflow: hidden;
 }
+#statusbar[hidden] { display: none; } /* PDF 标签：display:flex 会压过 hidden 的默认 none，需显式还原 */
 .st-seg {
   height: 100%;
   padding: 0 12px;

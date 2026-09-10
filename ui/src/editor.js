@@ -5,6 +5,7 @@
 import { state, activeTab } from "./state.js";
 import { scheduleSessionSave } from "./session.js";
 import { t, cmPhrases } from "./i18n.js";
+import { APP_NAME } from "./constants.js";
 import { undo as cmUndo, redo as cmRedo, setPhrases as cmSetPhrases, openSearchPanel } from "/vendor/cm.js";
 
 let cm = null; // createEditor 返回的 API（view/setDoc/setLanguage/setDark/setWrap/focus）
@@ -161,7 +162,7 @@ export function markDirty() {
     window.dispatchEvent(new CustomEvent("tabs-refresh"));
   }
   const ed = document.getElementById("editor");
-  if (tab) document.title = `${tab.title}${tab.dirty ? " *" : ""} - HiEditor`;
+  if (tab) document.title = `${tab.title}${tab.dirty ? " *" : ""} - ${APP_NAME}`;
   scheduleSessionSave();
   updateStatus();
 }

@@ -14,11 +14,17 @@ import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, rep
 import { setIcon } from "./icons.js";
 import { applyTheme } from "./theme.js";
 import * as i18n from "./i18n.js";
+import { APP_NAME } from "./constants.js";
 import { scheduleSessionSave, flushSession } from "./session.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
 async function boot() {
+  // 标题栏应用名与窗口 <title> 也统一取自 constants.js（HTML 里的文本只是加载前的占位）
+  document.title = APP_NAME;
+  const appNameEl = document.querySelector(".app-name");
+  if (appNameEl) appNameEl.textContent = APP_NAME;
+
   // 填充所有 data-ico 图标（4.6 图标清单；kebab-case → camelCase 映射 ICONS 键）
   document.querySelectorAll("[data-ico]").forEach((el) => {
     const key = el.dataset.ico.replace(/-(\w)/g, (_, c) => c.toUpperCase());
@@ -337,7 +343,7 @@ function handleCmUpdate(u) {
       tab.dirty = true;
       window.dispatchEvent(new CustomEvent("tabs-refresh"));
     }
-    document.title = `${tab.title}${tab.dirty ? " *" : ""} - HiEditor`;
+    document.title = `${tab.title}${tab.dirty ? " *" : ""} - ${APP_NAME}`;
     scheduleSessionSave();
   }
   if (u.selectionSet || u.docChanged) updateStatus();
