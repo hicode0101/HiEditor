@@ -2,7 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use hi_editor_core::{encoding as enc, eol, settings};
-use hieditor_shellmenu as shellmenu;
+#[cfg(target_os = "windows")]
+use hieditor_shellmenu as shellmenu; // Windows 资源管理器右键菜单 DLL 的清单/产物常量，仅 Windows 依赖
 use hi_editor_plugin::host::{PluginHost, PluginStatus};
 use hi_editor_plugin::manifest::Manifest;
 use serde::Serialize;

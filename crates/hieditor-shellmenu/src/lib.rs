@@ -1,5 +1,10 @@
 //! HiEditor Win11 前排右键菜单 COM 服务（稀疏 MSIX + IExplorerCommand，EmEditor 同款机制）。
 //! explorer.exe 以 Apartment 线程加载本 DLL；Invoke 时启动同目录 HiEditor.exe 并传入所选文件路径。
+//!
+//! Windows 专属组件：非 Windows 目标下整个 crate 编译为空（#![cfg] 逐出全部内容），
+//! 保证 `cargo build --release` 在 Linux/macOS 打包工作流中也能通过；产物 .so 无功能，不参与分发。
+
+#![cfg(windows)]
 
 use windows::core::{implement, Interface, GUID, HRESULT, PWSTR};
 use windows::Win32::Foundation::{BOOL, E_FAIL, E_NOTIMPL, HINSTANCE, S_OK};
