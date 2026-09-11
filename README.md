@@ -4,7 +4,7 @@
 
 **一个轻量、快速、插件化的跨平台文本 / 代码编辑器**
 
-简洁的 Windows 11 记事本风格界面，内置 15 门语言语法高亮、JSON/XML 格式化与 PDF 阅读，原生 C ABI 插件体系。
+简洁的 Windows 11 记事本风格界面，内置 16 门语言语法高亮、JSON/XML 格式化与 PDF 阅读，原生 C ABI 插件体系。
 
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)]()
 [![Rust](https://img.shields.io/badge/built%20with-Rust-DEA584?logo=rust)]()
@@ -37,7 +37,7 @@
 - 🖱️ **拖放打开**、**打印**（Ctrl+P，支持输出为 PDF）、30%–500% 缩放、自动换行
 
 ### 语言与高亮
-- **15 门语言语法高亮**：JSON / XML / Markdown / HTML / CSS / JavaScript / TypeScript / Python / Java / C# / C / C++ / Go / Rust / SQL / YAML / Shell / INI-TOML（按扩展名自动识别）
+- **16 门语言语法高亮**：JSON / XML / Markdown / HTML / CSS / JavaScript / TypeScript / Python / Java / C# / C / C++ / Go / Rust / SQL / PHP / YAML / Shell / INI-TOML（按扩展名自动识别）
 - **JSON / XML 格式化与压缩**：编辑菜单、右键菜单、快捷键（Ctrl+Shift+J / Ctrl+Alt+J / Ctrl+Shift+L / Ctrl+Alt+L）多入口
 - **状态栏语言切换**：自动检测 / 纯文本置顶，选择高亮语言即时生效
 

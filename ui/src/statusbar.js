@@ -31,7 +31,8 @@ function languageItems() {
     if (!priority.includes(l.id)) items.push(item(l.id));
   }
   return [
-    { label: t("status.auto"), checked: tab.langAuto !== false, action: () => setTabLanguage(autoDetect(tab)) },
+    // 自动检测仅在尚未确定具体语言（如空白新建标签）时勾选；识别出格式后只勾选对应语言，避免双勾
+    { label: t("status.auto"), checked: !tab.lang && tab.langAuto !== false, action: () => setTabLanguage(autoDetect(tab)) },
     { sep: true },
     ...items,
   ];

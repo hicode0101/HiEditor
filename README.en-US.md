@@ -4,7 +4,7 @@
 
 **A lightweight, fast, plugin-based cross-platform text / code editor**
 
-Clean Windows 11 Notepad-style interface with syntax highlighting for 15 languages, JSON/XML formatting, and PDF viewing, powered by a native C ABI plugin system.
+Clean Windows 11 Notepad-style interface with syntax highlighting for 16 languages, JSON/XML formatting, and PDF viewing, powered by a native C ABI plugin system.
 
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)]()
 [![Rust](https://img.shields.io/badge/built%20with-Rust-DEA584?logo=rust)]()
@@ -37,7 +37,7 @@ Clean Windows 11 Notepad-style interface with syntax highlighting for 15 languag
 - 🖱️ **Drag & drop to open**, **print** (Ctrl+P, supports PDF output), 30%–500% zoom, word wrap
 
 ### Languages & Highlighting
-- **Syntax highlighting for 15 languages**: JSON / XML / Markdown / HTML / CSS / JavaScript / TypeScript / Python / Java / C# / C / C++ / Go / Rust / SQL / YAML / Shell / INI-TOML (auto-detected by file extension)
+- **Syntax highlighting for 16 languages**: JSON / XML / Markdown / HTML / CSS / JavaScript / TypeScript / Python / Java / C# / C / C++ / Go / Rust / SQL / PHP / YAML / Shell / INI-TOML (auto-detected by file extension)
 - **JSON / XML formatting & minification**: available from the edit menu, context menu, and shortcuts (Ctrl+Shift+J / Ctrl+Alt+J / Ctrl+Shift+L / Ctrl+Alt+L)
 - **Status-bar language switch**: auto-detect / plain text pinned to the top; changing the highlight language takes effect immediately
 

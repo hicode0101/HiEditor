@@ -23,6 +23,7 @@
     { "id": "go", "name": "Go", "extensions": [".go"], "highlight": true },
     { "id": "rust", "name": "Rust", "extensions": [".rs"], "highlight": true },
     { "id": "sql", "name": "SQL", "extensions": [".sql"], "highlight": true },
+    { "id": "php", "name": "PHP", "extensions": [".php", ".phtml"], "highlight": true },
     { "id": "yaml", "name": "YAML", "extensions": [".yml", ".yaml"], "highlight": true },
     { "id": "shell", "name": "Shell", "extensions": [".sh", ".bash", ".zsh"], "highlight": true },
     { "id": "ini", "name": "INI/TOML", "extensions": [".ini", ".toml", ".cfg", ".conf"], "highlight": true },

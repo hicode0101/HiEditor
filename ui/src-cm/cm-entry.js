@@ -19,6 +19,7 @@ import { cpp } from "@codemirror/lang-cpp";
 import { go } from "@codemirror/lang-go";
 import { rust } from "@codemirror/lang-rust";
 import { sql } from "@codemirror/lang-sql";
+import { php } from "@codemirror/lang-php";
 import { StreamLanguage, syntaxHighlighting, HighlightStyle, indentUnit } from "@codemirror/language";
 import { search, searchKeymap, openSearchPanel } from "@codemirror/search";
 import { yaml } from "@codemirror/legacy-modes/mode/yaml";
@@ -176,6 +177,7 @@ const langResolver = {
   go: () => go(),
   rust: () => rust(),
   sql: () => sql(),
+  php: () => php(),
   yaml: () => StreamLanguage.define(yaml),
   shell: () => StreamLanguage.define(shell),
   ini: () => StreamLanguage.define(properties), // .ini/.cfg/.conf 键值语法（.toml 同 ID 近似覆盖）
