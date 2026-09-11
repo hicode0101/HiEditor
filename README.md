@@ -23,9 +23,13 @@
 
 ![HiEditor 主界面](docs/ScreenShot/HiEditor-1.png)
 
-**设置 —— 模态对话框 / 插件管理**
+**PDF —— 阅读浏览**
 
 ![HiEditor 设置](docs/ScreenShot/HiEditor-2.png)
+
+**设置 —— 模态对话框 / 插件管理**
+
+![HiEditor 设置](docs/ScreenShot/HiEditor-3.png)
 
 ## ✨ 功能特性
 

@@ -23,9 +23,13 @@ Clean Windows 11 Notepad-style interface with syntax highlighting for 16 languag
 
 ![HiEditor main window](docs/ScreenShot/HiEditor-1.png)
 
-**Settings — modal dialog / plugin management**
+**PDF — Read **
 
 ![HiEditor settings](docs/ScreenShot/HiEditor-2.png)
+
+**Settings — modal dialog / plugin management**
+
+![HiEditor settings](docs/ScreenShot/HiEditor-3.png)
 
 ## ✨ Features
 

@@ -91,8 +91,11 @@ async function renderPage(tab, doc, n) {
   holder.style.height = Math.round(viewport.height) + "px";
   holder.style.setProperty("--scale-factor", scale);
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(viewport.width * 2);
-  canvas.height = Math.round(viewport.height * 2);
+  // 位图按 dpr 放大提升清晰度；必须同步传 transform，否则 pdf.js 仍按 1× 绘制，
+  // 内容缩在位图左上角 1/4，页面右/下方出现大片空白（内容视觉上缩小一半）
+  const dpr = Math.min(window.devicePixelRatio || 1, 2) || 1;
+  canvas.width = Math.floor(viewport.width * dpr);
+  canvas.height = Math.floor(viewport.height * dpr);
   canvas.style.width = Math.round(viewport.width) + "px";
   canvas.style.height = Math.round(viewport.height) + "px";
   holder.appendChild(canvas);
@@ -104,7 +107,11 @@ async function renderPage(tab, doc, n) {
   tab.pdfHolders[n] = holder;
   if (pageObserver) pageObserver.observe(holder);
   const ctx = canvas.getContext("2d");
-  await page.render({ canvasContext: ctx, viewport }).promise;
+  await page.render({
+    canvasContext: ctx,
+    viewport,
+    transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null,
+  }).promise;
   const tl = new pdfjs.TextLayer({
     textContentSource: page.streamTextContent(),
     container: textDiv,
