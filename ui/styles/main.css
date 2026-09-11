@@ -799,6 +799,16 @@ button.st-seg:active { background: var(--light-pressed); }
   pointer-events: auto;
   animation: flyout-in 0.12s ease-out;
 }
+/* 长列表（高亮语言/最近文件等无子菜单的弹层）限高滚动。
+   含子菜单的菜单不能加 overflow：overflow-y:auto 会连带 overflow-x 裁掉右侧弹出的子菜单 */
+.menu-flyout.scrollable {
+  max-height: 62vh;
+  overflow-y: auto;
+  overscroll-behavior: contain; /* 滚到头不带动主窗口 */
+}
+.menu-flyout.scrollable::-webkit-scrollbar { width: 10px; }
+.menu-flyout.scrollable::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 5px; border: 3px solid transparent; background-clip: content-box; }
+.menu-flyout.scrollable::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); background-clip: content-box; }
 @keyframes flyout-in {
   from { opacity: 0; transform: translateY(-2px); }
   to { opacity: 1; transform: translateY(0); }

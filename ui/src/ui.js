@@ -62,9 +62,11 @@ export function openMenu(anchor, items, { align = "left", x = null, y = null } =
 
   const flyout = document.createElement("div");
   flyout.className = "menu-flyout";
+  let hasSub = false; // 是否含子菜单：含子菜单的弹层不能限高滚动（overflow 会裁掉右侧弹出的子菜单）
   let yShift = 0;
   for (const item of items) {
     if (item.submenu) {
+      hasSub = true;
       // 子菜单：嵌套在父项内，点击展开（父菜单保留）
       const holder = document.createElement("div");
       holder.style.position = "relative";
@@ -86,7 +88,7 @@ export function openMenu(anchor, items, { align = "left", x = null, y = null } =
         const existing = holder.querySelector(":scope > .menu-flyout");
         if (existing) { existing.remove(); return; }
         const sub = document.createElement("div");
-        sub.className = "menu-flyout";
+        sub.className = "menu-flyout scrollable"; // 子菜单自身无下级，可安全限高滚动（最近文件列表长）
         sub.style.position = "absolute";
         sub.style.left = "calc(100% - 6px)";
         sub.style.top = "0";
@@ -100,6 +102,7 @@ export function openMenu(anchor, items, { align = "left", x = null, y = null } =
       flyout.appendChild(buildItem(item));
     }
   }
+  if (!hasSub) flyout.classList.add("scrollable"); // 长列表限高滚动（高亮语言/最近文件），不影响带子菜单的菜单
   layer().appendChild(flyout);
 
   const rect = anchor.getBoundingClientRect();
@@ -111,6 +114,10 @@ export function openMenu(anchor, items, { align = "left", x = null, y = null } =
   if (py + fh > window.innerHeight - 4) py = Math.max(4, py - fh - 4);
   flyout.style.left = px + "px";
   flyout.style.top = py + "px";
+
+  // 限高滚动后打开时自动滚到当前勾选项（如高亮语言菜单），保证选中项可见
+  const checked = flyout.querySelector(".menu-item.checked");
+  if (checked) checked.scrollIntoView({ block: "center" });
 
   openFlyout = flyout;
   openAnchor = anchor;
