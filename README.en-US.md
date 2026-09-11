@@ -4,7 +4,7 @@
 
 **A lightweight, fast, plugin-based cross-platform text / code editor**
 
-Clean Windows 11 Notepad-style interface with syntax highlighting for 15 languages, JSON/XML formatting, and a native C ABI plugin system.
+Clean Windows 11 Notepad-style interface with syntax highlighting for 15 languages, JSON/XML formatting, and PDF viewing, powered by a native C ABI plugin system.
 
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)]()
 [![Rust](https://img.shields.io/badge/built%20with-Rust-DEA584?logo=rust)]()
@@ -30,8 +30,8 @@ Clean Windows 11 Notepad-style interface with syntax highlighting for 15 languag
 ## ✨ Features
 
 ### Editing Experience
-- 🗂️ **Multi-tab editing**: independent encoding / line endings / language / zoom per tab; session auto-restore (unsaved content survives crashes and force kills)
-- 🔤 **Per-tab font & size**: independent font and size (10–36px) per tab, line height scales at 1.5×, restored when you switch back
+- 🗂️ **Multi-tab editing**: independent encoding / line endings / language / zoom per tab; session auto-restore (unsaved content survives crashes and force kills); tabs can be drag-reordered, the tab context menu offers reveal-in-folder / copy path, and unsaved tabs show a dot marker before the file name
+- 🔤 **Per-tab font & size**: independent font and size (10–36px) per tab, line height scales at 1.5×, restored when you switch back; custom fonts dropped into the `fonts/` folder appear in the font dropdown automatically
 - ↩️ **Full edit menu**: undo / redo / select all / cut / copy / paste / delete, transform to UPPERCASE / lowercase / Capitalize Each Word
 - 🔍 **Find & replace**: top panel with match case / regex / whole word, wrap-around search, replace all, fully localized UI
 - 🖱️ **Drag & drop to open**, **print** (Ctrl+P, supports PDF output), 30%–500% zoom, word wrap
@@ -39,12 +39,27 @@ Clean Windows 11 Notepad-style interface with syntax highlighting for 15 languag
 ### Languages & Highlighting
 - **Syntax highlighting for 15 languages**: JSON / XML / Markdown / HTML / CSS / JavaScript / TypeScript / Python / Java / C# / C / C++ / Go / Rust / SQL / YAML / Shell / INI-TOML (auto-detected by file extension)
 - **JSON / XML formatting & minification**: available from the edit menu, context menu, and shortcuts (Ctrl+Shift+J / Ctrl+Alt+J / Ctrl+Shift+L / Ctrl+Alt+L)
+- **Status-bar language switch**: auto-detect / plain text pinned to the top; changing the highlight language takes effect immediately
+
+### PDF Viewing
+- 📕 **PDF viewer**: opening a `.pdf` file shows a read-only viewer tab with continuous scrolling, powered by pdf.js
+- 🔢 **Page navigation**: type a page number and press Enter to jump, previous / next buttons (automatically disabled on the first / last page), current page updates live while scrolling
+- 🔍 **Zoom & fit**: − / percentage / ＋ (20%–500%), one-click **Fit Page** / **Fit Width**, plus Ctrl+scroll and Ctrl+= / Ctrl+- / Ctrl+0
+- 📋 **Text selection & copy**: an embedded text layer lets you select and copy text right from the PDF
+- While viewing, the font / size toolbar and status bar hide automatically, leaving only the dedicated PDF toolbar
 
 ### Interface & Themes
 - 🎨 **Light / dark themes**: dark-mode editor area uses `#2B2B2B`; all controls follow the theme
 - 🌐 **UI internationalization**: Simplified Chinese / English, follows the system by default, can be forced
 - 🧰 **Smart toolbar**: the default toolbar carries just font & size; plugins can declare per-language custom toolbars (e.g. the Markdown toolbar); when the window is too narrow, overflowing items collapse into a `⋯` button that expands as a wrapped panel
 - ⚙️ **Modal settings dialog**: appearance / editing / files / Markdown / session / plugins / about
+- 🪟 **Window state memory**: optionally remember the last window size and position across restarts (settings toggle)
+- 📜 **Scrollable long menus**: long lists such as the highlight-language and recent-files menus scroll within a bounded height and auto-center on the currently selected item
+
+### System Integration (Windows)
+- 🖱️ **Explorer context menu**: register / unregister "Edit with HiEditor" from Settings with one click (per-user, no admin required)
+- 🪟 **Single instance**: files from repeated launches are forwarded to a new tab in the running instance; multi-select open is supported
+- 🎯 **Desktop shortcut**: create one from Settings with a single click
 
 ### Files & Encodings
 - 📖 **Multiple encodings**: UTF-8 (with BOM) / UTF-16 LE/BE / **GBK / GB18030** / lossy ANSI decoding, reopen or save with a specific encoding
@@ -52,7 +67,7 @@ Clean Windows 11 Notepad-style interface with syntax highlighting for 15 languag
 
 ### Plugin Architecture
 - 🧩 **Native C ABI plugins**: loaded as dynamic libraries; `config.json` declaratively contributes languages / formatter commands / custom toolbars / view controls
-- 📦 **6 built-in plugins**: JSON, XML, Markdown, Notepad (plain text), TXT enhancement, code languages bundle
+- 📦 **7 built-in plugins**: JSON, XML, Markdown, Notepad (plain text), TXT enhancement, code languages bundle, PDF viewing
 - 🔌 **Plugin management**: visual enable/disable in Settings, persisted to each plugin's `config.json`, effective after restart
 
 ## 🚀 Getting Started
@@ -76,7 +91,7 @@ cargo build --release
 
 Build output: `target/release/HiEditor.exe` + `plugins/<name>/bin/*.dll`; the release script arranges everything into a ready-to-run directory layout and compresses it into `dist/`.
 
-**GitHub Actions auto-build**: pushing to `main` or tagging `v*` automatically builds on four platforms (Windows / Linux / macOS Intel / macOS Apple Silicon) and uploads the zips; tagging a release also creates a GitHub Release with all installers. See [.github/workflows/release.yml](.github/workflows/release.yml).
+**GitHub Actions builds**: the workflow is **manual-dispatch only** (Actions page → Release Build → Run workflow); you can build a single platform or all four, and the zips are uploaded as Artifacts. See [.github/workflows/release.yml](.github/workflows/release.yml).
 
 ## 🧩 Plugin Development
 
@@ -94,6 +109,7 @@ For the full ABI protocol, build and deployment instructions, see the **[Plugin 
 
 ## 🗺️ Roadmap
 
+- [x] Read-only PDF viewing (pdf.js rendering / page navigation / zoom & fit / text copy)
 - [x] Markdown preview mode (Edit / Preview segmented toggle, GFM rendering)
 - [ ] Markdown WYSIWYG editing (Milkdown, in-place editing)
 - [ ] Go to line, bookmarks
