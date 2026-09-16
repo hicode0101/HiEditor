@@ -13,6 +13,8 @@ Clean Windows 11 Notepad-style interface with syntax highlighting for 16 languag
 
 [简体中文](README.md) | English
 
+Note: It is recommended to run this tool on Windows 10 or later.
+
 </div>
 
 ---
