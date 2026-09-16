@@ -1500,7 +1500,7 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hi-editor-app"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "hi-editor-core",
  "hi-editor-plugin",
@@ -1517,7 +1517,7 @@ dependencies = [
 
 [[package]]
 name = "hi-editor-core"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "chardetng",
  "encoding_rs",
@@ -1527,7 +1527,7 @@ dependencies = [
 
 [[package]]
 name = "hi-editor-plugin"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "hi-editor-plugin-abi",
  "libloading 0.8.9",
@@ -1538,18 +1538,18 @@ dependencies = [
 
 [[package]]
 name = "hi-editor-plugin-abi"
-version = "0.1.0"
+version = "0.1.2"
 
 [[package]]
 name = "hi-plugin-code"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "hi-editor-plugin-abi",
 ]
 
 [[package]]
 name = "hi-plugin-json"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "hi-editor-plugin-abi",
  "serde_json",
@@ -1557,35 +1557,35 @@ dependencies = [
 
 [[package]]
 name = "hi-plugin-markdown"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "hi-editor-plugin-abi",
 ]
 
 [[package]]
 name = "hi-plugin-notepad"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "hi-editor-plugin-abi",
 ]
 
 [[package]]
 name = "hi-plugin-pdf"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "hi-editor-plugin-abi",
 ]
 
 [[package]]
 name = "hi-plugin-txt"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "hi-editor-plugin-abi",
 ]
 
 [[package]]
 name = "hi-plugin-xml"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "hi-editor-plugin-abi",
  "quick-xml 0.37.5",
@@ -1593,7 +1593,7 @@ dependencies = [
 
 [[package]]
 name = "hieditor-shellmenu"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "windows 0.58.0",
  "windows-core 0.58.0",

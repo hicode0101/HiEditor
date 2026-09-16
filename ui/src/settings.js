@@ -5,7 +5,7 @@ import { showDialog } from "./ui.js";
 import { ICONS } from "./icons.js";
 import { t } from "./i18n.js";
 import { setLanguage as i18nSetLanguage, applyI18n } from "./i18n.js";
-import { APP_NAME_VERSION } from "./constants.js";
+import { APP_NAME } from "./constants.js";
 import { applyTheme } from "./theme.js";
 import { setEditorDark } from "./editor.js";
 
@@ -270,7 +270,11 @@ async function renderSettingsItems(panel, category) {
   if (category === "about") {
     const info = document.createElement("div");
     info.style.cssText = "font-size:13px;color:var(--text-secondary);line-height:2";
-    info.textContent = APP_NAME_VERSION + " — " + t("about.desc");
+    // 版本号直接读 tauri.conf.json 的 version（与 exe/安装包同一来源）
+    window.__TAURI__.app
+      .getVersion()
+      .then((v) => { info.textContent = `${APP_NAME} ${v} — ` + t("about.desc"); })
+      .catch(() => { info.textContent = APP_NAME + " — " + t("about.desc"); });
     panel.appendChild(info);
   }
   if (category === "about") renderAbout(panel);
