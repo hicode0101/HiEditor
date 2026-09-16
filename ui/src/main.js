@@ -6,7 +6,7 @@ import { initMenus, initEditorContextMenu } from "./menus.js";
 import { initToolbars, updateToolbarOverflow } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
-import { initMarkdownPreview, renderMdPreview } from "./mdpreview.js";
+import { initMarkdownPreview, renderMdPreview, syncMdSegButtons } from "./mdpreview.js";
 import { initPdfViewer, isPdfTab, renderPdfTab, zoomPdf, resetPdfZoom } from "./pdfviewer.js";
 import { syncTabBanner } from "./ui.js";
 import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
@@ -283,6 +283,7 @@ function syncContentView() {
   const isPdf = isPdfTab(tab);
   const isMd = !!(tab && tab.lang === "markdown");
   const mdPreview = isMd && tab.mode === "wysiwyg";
+  syncMdSegButtons(); // 编辑/预览分段按钮高亮跟随当前标签的模式
   document.getElementById("editor").hidden = isPdf || mdPreview;
   document.getElementById("md-bar").hidden = !isMd;
   document.getElementById("md-preview").hidden = !(isMd && mdPreview);
