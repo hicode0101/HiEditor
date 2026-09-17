@@ -1,14 +1,15 @@
-# HiEditor 多平台构建：已改为仅手动触发（Actions 页面 → Release Build → Run workflow）
-# 如需恢复 push / 打 tag 自动构建，把 on 段替换回：
-# on:
-#   push:
-#     branches: [main]
-#     tags: ["v*"]
+# HiEditor 多平台构建：
+#   - 推送 v* 标签（如 v1.2.3）→ 四平台自动构建，zip 以该版本号命名，并自动创建 GitHub Release
+#   - tag 版本号会回写进 tauri.conf.json 再编译，exe 属性/关于页显示的版本与 tag、压缩包名三者统一
+#   - workflow_dispatch 手动触发保留：版本号取默认 1.0.0，不改写 tauri.conf.json
+# 如需恢复 push main 分支自动构建，在 on.push 下追加 branches: [main]
 
 name: Release Build
 
 on:
-  workflow_dispatch: # 仅手动触发
+  push:
+    tags: ["v*"]
+  workflow_dispatch: # 手动触发保留
 
 jobs:
   build:
@@ -39,7 +40,7 @@ jobs:
       - name: Cargo 编译缓存
         uses: Swatinem/rust-cache@v2
 
-      - name: 计算版本号（tag v1.2.3 → 1.2.3，普通 push 用默认 1.0.0）
+      - name: 计算版本号（tag v1.2.3 → 1.2.3，手动触发用默认 1.0.0）
         id: ver
         shell: bash
         run: |
@@ -48,6 +49,15 @@ jobs:
           else
             echo "version=1.0.0" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: 版本号统一回写 tauri.conf.json（exe 属性/关于页 = tag 版本）
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash # 三平台通用：windows-latest 上走 Git Bash，sed -i.bak 兼容 GNU/BSD
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i.bak 's/"version": *"[^"]*"/"version": "'"${VERSION}"'"/' crates/hi-editor-app/tauri.conf.json
+          rm -f crates/hi-editor-app/tauri.conf.json.bak
+          echo "tauri.conf.json version → $(grep -o '"version": *"[^"]*"' crates/hi-editor-app/tauri.conf.json | head -1)"
 
       - name: 安装 Linux 构建依赖（Tauri v2）
         if: matrix.os == 'ubuntu-latest'
