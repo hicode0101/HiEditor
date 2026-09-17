@@ -23,9 +23,10 @@ jobs:
           - os: ubuntu-latest # Linux x64
             platform: linux64
             script: package-linux-release.sh
-          - os: macos-13 # macOS Intel
-            platform: mac64
+          - os: macos-14 # macOS Intel 包：GitHub 已淘汰 macos-13（Intel）机型，
+            platform: mac64 # 改在 arm64 机器上交叉编译 x86_64，Intel 支持不中断
             script: package-mac-release.sh
+            rust-target: x86_64-apple-darwin
           - os: macos-14 # macOS Apple Silicon (M 系列)
             platform: mac-arm64
             script: package-mac-release.sh
@@ -36,6 +37,8 @@ jobs:
 
       - name: 安装 Rust 工具链
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-target }} # 交叉编译目标（原生构建为空，无副作用）
 
       - name: Cargo 编译缓存
         uses: Swatinem/rust-cache@v2
@@ -79,7 +82,8 @@ jobs:
           CI: true
         run: |
           chmod +x "${{ matrix.script }}"
-          ./${{ matrix.script }} "${{ steps.ver.outputs.version }}"
+          # 第 4 参 = Rust 交叉编译目标（原生构建为空）；第 2/3 参保持脚本默认
+          ./${{ matrix.script }} "${{ steps.ver.outputs.version }}" "" dist "${{ matrix.rust-target }}"
 
       - name: 校验产物存在
         shell: bash
