@@ -6,6 +6,7 @@ import { ICONS } from "./icons.js";
 import { t } from "./i18n.js";
 import { setLanguage as i18nSetLanguage, applyI18n } from "./i18n.js";
 import { APP_NAME } from "./constants.js";
+import { fontOptions } from "./fonts.js";
 import { applyTheme } from "./theme.js";
 import { setEditorDark } from "./editor.js";
 
@@ -97,6 +98,21 @@ function item(labels, control) {
   left.append(label, desc);
   row.append(left, control);
   return row;
+}
+
+// 全局默认字体下拉：清单与工具栏共用（fonts.js）。所选字体已不存在（被卸载/删除）时
+// 自动回落到"跟随系统默认字体"并持久化，避免下拉框悬空
+function fontFamilyControl(s) {
+  const opts = fontOptions(t("settings.fontFamily.system"));
+  if (s.font_family && !opts.some(([v]) => v === s.font_family)) {
+    s.font_family = "";
+    persist();
+  }
+  return selectControl(s.font_family || "", opts, (v) => {
+    s.font_family = v;
+    persist();
+    window.dispatchEvent(new CustomEvent("settings-changed"));
+  });
 }
 
 function selectControl(value, options, onChange) {
@@ -234,6 +250,8 @@ async function renderSettingsItems(panel, category) {
       ),
     ],
     editor: [
+      // 全局默认字体（v1.7）：所有文件类型未单独设置字体时使用；放在字号上方
+      item({ label: t("settings.fontFamily"), desc: t("settings.fontFamily.desc") }, fontFamilyControl(s)),
       item({ label: t("settings.fontSize"), desc: t("settings.fontSize.desc") }, numberControl(s.font_size, 8, 72, (v) => { s.font_size = v; persist(); window.dispatchEvent(new CustomEvent("settings-changed")); })),
       item({ label: t("settings.formatIndent"), desc: t("settings.formatIndent.desc") }, numberControl(s.format_indent, 0, 8, (v) => { s.format_indent = v; persist(); })),
     ],

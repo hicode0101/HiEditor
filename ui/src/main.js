@@ -14,6 +14,7 @@ import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, rep
 import { setIcon } from "./icons.js";
 import { applyTheme } from "./theme.js";
 import * as i18n from "./i18n.js";
+import { fontOptions } from "./fonts.js";
 import { APP_NAME } from "./constants.js";
 import { scheduleSessionSave, flushSession } from "./session.js";
 
@@ -264,8 +265,8 @@ function bindGlobalKeys() {
   window.addEventListener("tab-switched", syncTabUi);
   window.addEventListener("tabs-refresh", syncTabUi);
   window.addEventListener("settings-changed", switchToolbar);
-  // 设置页改全局默认字号 → 未单独设置字号的标签立即生效（applyTabFont 回退默认值）
-  window.addEventListener("settings-changed", switchToolbar);
+  // 设置页改默认字体/字号 → 当前标签立即生效（applyTabFont 重算 CSS 变量）
+  window.addEventListener("settings-changed", applyTabFont);
   document.getElementById("btn-settings").addEventListener("click", () =>
     state.settingsOpen ? closeSettings() : openSettings()
   );
@@ -371,21 +372,12 @@ async function loadUserFonts() {
 
 async function initFontControls() {
   const fam = document.getElementById("tl-font-family");
-  const fonts = [
-    ["", "默认字体"],
-    ["Cascadia Mono", "Cascadia Mono"],
-    ["Consolas", "Consolas"],
-    ["Courier New", "Courier New"],
-    ["SimSun", "宋体 SimSun"],
-    ["Microsoft YaHei", "微软雅黑"],
-    ["Arial", "Arial"],
-  ];
-  // fonts/ 目录用户字体追加到静态列表之后（v1.7，family = "uf-<文件名>"）
+  // 与设置页"默认字体"共用同一清单（fonts.js）；fonts/ 用户字体先注入再枚举
+  let fonts;
   try {
-    for (const f of await loadUserFonts()) {
-      fonts.push(["uf-" + f.name, f.name]);
-    }
+    await loadUserFonts();
   } catch (e) { /* 枚举失败只用静态列表 */ }
+  fonts = fontOptions(i18n.t("settings.fontFamily.system"));
   for (const [v, label] of fonts) {
     const opt = document.createElement("option");
     opt.value = v;
@@ -425,7 +417,7 @@ function syncFontControls() {
   if (!tab) return;
   document.getElementById("tl-font-family").value = tab.fontFamily || "";
   document.getElementById("tl-font-size").value = String(
-    tab.fontSize || state.settings.font_size || 15
+    tab.fontSize || state.settings.font_size || 14
   );
 }
 
@@ -433,10 +425,13 @@ function syncFontControls() {
 // 标签未单独设置时回退全局设置默认值；编辑器单实例，切换标签时重算 CSS 变量即可。
 function applyTabFont() {
   const tab = activeTab();
-  const fam = (tab && tab.fontFamily) || "";
-  const size = (tab && tab.fontSize) || state.settings.font_size || 15;
+  // 字体优先级：标签单独设置 > 设置页全局默认字体 > 空（编辑区=等宽栈，预览=界面字体）
+  const fam = (tab && tab.fontFamily) || state.settings.font_family || "";
+  const size = (tab && tab.fontSize) || state.settings.font_size || 14;
   if (fam) {
-    document.documentElement.style.setProperty("--editor-font-family", `"${fam}"`);
+    // 所选字体不存在（被卸载/用户字体被删）时，浏览器自动落到下一顺位的系统 UI 字体栈，
+    // 即"跟随系统默认字体"，无需手动探测
+    document.documentElement.style.setProperty("--editor-font-family", `"${fam}", var(--ui-font)`);
   } else {
     document.documentElement.style.removeProperty("--editor-font-family");
   }
