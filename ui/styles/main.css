@@ -489,6 +489,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   background: var(--row-bg);
 }
 #pdf-view[hidden] { display: none; }
+/* 全局 * 选择器对每个元素都直接设了 user-select:none，PDF 文本层要逐元素放开，
+   文字才能选中复制（Ctrl+C 走浏览器默认行为，右键菜单见 ui.js initCopyContextMenu） */
+#pdf-view,
+#pdf-view * { user-select: text; }
 .pdf-page {
   position: relative;
   margin: 0 auto 16px;

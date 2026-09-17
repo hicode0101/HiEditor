@@ -1,11 +1,51 @@
 // 浮层组件：下拉菜单（UI-5.1）、错误对话框（UI-5.4 风格）、tooltip（UI-1.7 样式）
 
 import { state, activeTab } from "./state.js";
+import { t } from "./i18n.js";
 
 const layer = () => document.getElementById("overlay-layer");
 
 let openFlyout = null;
 let openAnchor = null;
+
+// ===== 只读视图（md 预览 / PDF 文本层）统一右键复制菜单 =====
+
+// 取 container 内的选区文本（选区可能从容器外起，限定锚点在容器内）
+function containerSelectionText(container) {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !container.contains(sel.anchorNode)) return "";
+  return sel.toString();
+}
+
+// 只读视图右键菜单：复制（无选区置灰）+ 已复制横幅。
+// Ctrl+C 无需额外处理：容器放开 user-select 后走浏览器默认复制行为。
+export function initCopyContextMenu(container) {
+  container.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const text = containerSelectionText(container); // 菜单项点击时选区可能已被清掉，先取快照
+    // 一次性游离锚点：避开 openMenu 的"同一锚点再点=收起"语义（同编辑区右键菜单的做法）
+    openMenu(
+      document.createElement("span"),
+      [
+        {
+          label: t("edit.copy"),
+          disabled: !text,
+          action: () => {
+            navigator.clipboard
+              .writeText(text)
+              .then(() => showBanner({ message: t("banner.copied"), info: true, autoHideMs: 2000 }))
+              .catch(() => {});
+          },
+        },
+      ],
+      { x: e.clientX, y: e.clientY }
+    );
+  });
+  container.addEventListener("mousedown", (e) => {
+    if (e.button === 0) closeFlyout(); // 左键开始新的选择前收起旧菜单（与编辑区同一套关闭语义）
+  });
+}
 
 export function closeFlyout() {
   if (openFlyout) {

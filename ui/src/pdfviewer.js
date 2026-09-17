@@ -2,6 +2,7 @@
 // 二进制数据经 read_binary_file（ArrayBuffer）加载，渲染进 #pdf-view。
 
 import { activeTab } from "./state.js";
+import { initCopyContextMenu } from "./ui.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -262,4 +263,6 @@ export function initPdfViewer() {
       zoomPdf(e.deltaY < 0 ? 0.1 : -0.1);
     }
   }, { passive: false });
+  // 文本层右键复制菜单 + Ctrl+C（共享 helper，与 md 预览同一套）
+  initCopyContextMenu(document.getElementById("pdf-view"));
 }

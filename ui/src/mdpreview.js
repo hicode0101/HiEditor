@@ -4,7 +4,7 @@
 
 import { state, activeTab } from "./state.js";
 import { t } from "./i18n.js";
-import { openMenu, closeFlyout, showBanner } from "./ui.js";
+import { initCopyContextMenu } from "./ui.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -110,42 +110,6 @@ export function initMarkdownPreview() {
     if (!btn) return;
     setMarkdownMode(btn.dataset.mdmode === "preview" ? "wysiwyg" : "source");
   });
-  initPreviewContextMenu();
-}
-
-// ===== 预览区选取复制：右键菜单"复制"；Ctrl+C 在放开 user-select 后走浏览器默认行为 =====
-
-function previewSelectionText(pv) {
-  const sel = window.getSelection();
-  if (!sel || sel.isCollapsed || !pv.contains(sel.anchorNode)) return "";
-  return sel.toString();
-}
-
-function initPreviewContextMenu() {
-  const pv = document.getElementById("md-preview");
-  pv.addEventListener("contextmenu", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const text = previewSelectionText(pv); // 菜单项点击时选区可能已被清掉，这里先取快照
-    // 一次性游离锚点：避开 openMenu 的"同一锚点再点=收起"语义（同编辑区右键菜单的做法）
-    openMenu(
-      document.createElement("span"),
-      [
-        {
-          label: t("edit.copy"),
-          disabled: !text,
-          action: () => {
-            navigator.clipboard
-              .writeText(text)
-              .then(() => showBanner({ message: t("banner.copied"), info: true, autoHideMs: 2000 }))
-              .catch(() => {});
-          },
-        },
-      ],
-      { x: e.clientX, y: e.clientY }
-    );
-  });
-  pv.addEventListener("mousedown", (e) => {
-    if (e.button === 0) closeFlyout(); // 左键开始新的选择前收起旧菜单（与编辑区同一套关闭语义）
-  });
+  // 预览区右键复制菜单 + Ctrl+C（共享 helper，与 PDF 文本层同一套）
+  initCopyContextMenu(document.getElementById("md-preview"));
 }
