@@ -349,7 +349,7 @@ async function renderPlugins(panel) {
 // ===== 关于页扩展信息（开源地址 / 作者微信） =====
 
 const ABOUT = {
-  repo: "https://github.com/hicode0101/HiEditor",
+  repo: "https://github.com/hicode0101/HiTools",
   wechatId: "hicode0101",
   wechatDisplay: "hicode0101（犀利的远哥）",
 };
