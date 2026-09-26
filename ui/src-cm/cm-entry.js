@@ -126,7 +126,9 @@ function editorTheme(dark) {
       ".cm-selectionBackground": {
         backgroundColor: dark ? "#294d6e" : "#add6ff",
       },
-      "&.cm-focused .cm-selectionBackground": {
+      // 聚焦选择器必须长于 CodeMirror baseTheme 的同名规则（>.cm-scroller>.cm-selectionLayer），
+      // 否则会被其默认深色 #233 按优先级覆盖
+      "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
         backgroundColor: dark ? "#294d6e" : "#add6ff",
       },
     },
