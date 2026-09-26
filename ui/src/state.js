@@ -39,6 +39,7 @@ export function newTabModel(init = {}) {
     fontFamily: init.fontFamily || null, // null = 跟随全局默认字体
     fontSize: init.fontSize || null, // null = 跟随全局默认字号
     banner: init.banner || null, // 标签归属横幅（文件级状态提示，如编码告警），随标签显隐
+    mtimeMs: init.mtimeMs ?? null, // 打开/保存时的磁盘修改时间快照（文件变更监视基准）
     scroll: 0,
     cursor: 0,
   };

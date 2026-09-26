@@ -185,22 +185,27 @@ window.addEventListener("mousedown", (e) => {
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     closeFlyout();
-    closeDialog();
+    if (dialogEl && !dialogEl.dataset.lock) closeDialog(); // lock 对话框只能通过按钮关闭
   }
 });
 
 // ===== 模态对话框（保存确认 UI-5.7 / 错误 FR-16.5 / 转到行等共用骨架） =====
 
 let dialogEl = null;
+let dialogResolve = null;
 
 /**
- * showDialog({ title, body, buttons: [{label, primary, value}] }) -> Promise<value|null>
+ * showDialog({ title, body, buttons: [{label, primary, value}], lock }) -> Promise<value|null>
+ * lock: 严格模态——点击遮罩 / Esc 均不关闭，必须点按钮退出（如文件变更重载确认）。
+ * 非 lock 对话框点遮罩或 Esc 按"取消"收场（resolve null）。
  */
-export function showDialog({ title, body = "", buttons = [{ label: "OK", primary: true, value: true }] }) {
+export function showDialog({ title, body = "", buttons = [{ label: "OK", primary: true, value: true }], lock = false }) {
   closeDialog();
   return new Promise((resolve) => {
+    dialogResolve = resolve;
     const backdrop = document.createElement("div");
     backdrop.className = "dialog-backdrop";
+    if (lock) backdrop.dataset.lock = "1";
     const dlg = document.createElement("div");
     dlg.className = "dialog";
     const t = document.createElement("div");
@@ -220,18 +225,17 @@ export function showDialog({ title, body = "", buttons = [{ label: "OK", primary
       btn.className = "dlg-btn" + (spec.primary ? " primary" : "");
       btn.textContent = spec.label;
       btn.addEventListener("click", () => {
+        const r = dialogResolve; // 先摘掉挂起的 resolve，再走 closeDialog，避免被二次置 null
+        dialogResolve = null;
         closeDialog();
-        resolve(spec.value);
+        r(spec.value);
       });
       actions.appendChild(btn);
     }
     dlg.appendChild(actions);
     backdrop.appendChild(dlg);
     backdrop.addEventListener("mousedown", (e) => {
-      if (e.target === backdrop) {
-        closeDialog();
-        resolve(null);
-      }
+      if (e.target === backdrop && !lock) closeDialog();
     });
     layer().appendChild(backdrop);
     dialogEl = backdrop;
@@ -244,6 +248,12 @@ export function closeDialog() {
   if (dialogEl) {
     dialogEl.remove();
     dialogEl = null;
+  }
+  if (dialogResolve) {
+    // 非按钮途径关闭（Esc 等）一律按"取消"收场；否则 await showDialog 的调用方会永久挂起
+    const r = dialogResolve;
+    dialogResolve = null;
+    r(null);
   }
 }
 

@@ -9,7 +9,7 @@ import { openSettings, closeSettings } from "./settings.js";
 import { initMarkdownPreview, renderMdPreview, syncMdSegButtons } from "./mdpreview.js";
 import { initPdfViewer, isPdfTab, renderPdfTab, zoomPdf, resetPdfZoom } from "./pdfviewer.js";
 import { syncTabBanner } from "./ui.js";
-import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument } from "./files.js";
+import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument, startFileWatcher } from "./files.js";
 import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance, openFind, openReplace } from "./editor.js";
 import { setIcon } from "./icons.js";
 import { applyTheme } from "./theme.js";
@@ -102,6 +102,7 @@ async function boot() {
   await initDragDrop();
   syncCaptionGlyph();
   setInterval(() => flushSession(), 30000); // 30 秒兜底（FR-10.3）
+  startFileWatcher(); // 文件变更监视（v1.8）：每 2 秒查活动标签的磁盘 mtime，外部修改时弹确认重载
   window.addEventListener("beforeunload", () => { flushSession(); });
 }
 

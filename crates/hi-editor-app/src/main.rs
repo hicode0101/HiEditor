@@ -26,6 +26,8 @@ struct ReadOut {
     eol: String,
     /// ANSI 等容错解码时为 true（FR-14.6 横幅依据）。
     lossy: bool,
+    /// 文件修改时间（Unix 毫秒），前端文件变更监视的基准快照。
+    mtime: u128,
 }
 
 #[derive(Serialize)]
@@ -139,6 +141,16 @@ fn save_session(app: AppHandle, session: serde_json::Value) -> Result<(), String
     std::fs::rename(&tmp, &path).map_err(|e| format!("替换会话失败：{e}"))
 }
 
+/// 文件修改时间（Unix 毫秒）；不可访问时返回 0。
+fn file_mtime_ms(path: &str) -> u128 {
+    std::fs::metadata(path)
+        .and_then(|m| m.modified())
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_millis())
+        .unwrap_or(0)
+}
+
 #[tauri::command]
 fn read_file(path: String, forced: Option<String>) -> Result<ReadOut, String> {
     let bytes = std::fs::read(&path).map_err(|e| format!("读取失败：{e}"))?;
@@ -157,11 +169,21 @@ fn read_file(path: String, forced: Option<String>) -> Result<ReadOut, String> {
         encoding: encoding.key(),
         eol: eol.key().to_string(),
         lossy,
+        mtime: file_mtime_ms(&path),
     })
 }
 
+/// 查询文件修改时间（Unix 毫秒）；文件不存在或不可访问时返回 null。
 #[tauri::command]
-fn save_file(path: String, text: String, encoding: String, eol: String) -> Result<(), String> {
+fn get_file_mtime(path: String) -> Option<u128> {
+    match file_mtime_ms(&path) {
+        0 => None,
+        m => Some(m),
+    }
+}
+
+#[tauri::command]
+fn save_file(path: String, text: String, encoding: String, eol: String) -> Result<u128, String> {
     let enc = enc::Encoding::from_key(&encoding).unwrap_or(enc::Encoding::Utf8);
     let target_eol = eol::Eol::from_key(&eol).unwrap_or(eol::Eol::Crlf);
     let normalized = eol::normalize(&text, target_eol);
@@ -172,7 +194,8 @@ fn save_file(path: String, text: String, encoding: String, eol: String) -> Resul
     std::fs::rename(&tmp, &path).map_err(|e| {
         let _ = std::fs::remove_file(&tmp);
         format!("保存失败：{e}")
-    })
+    })?;
+    Ok(file_mtime_ms(&path))
 }
 
 #[tauri::command]
@@ -798,6 +821,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             read_file,
             save_file,
+            get_file_mtime,
             get_registry,
             get_plugins,
             format_text,

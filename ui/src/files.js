@@ -2,7 +2,7 @@
 
 import { state, activeTab, newTabModel, langForPath } from "./state.js";
 import { loadActiveIntoEditor, persistActiveFromEditor } from "./editor.js";
-import { showDialog, syncTabBanner } from "./ui.js";
+import { showDialog, showBanner, syncTabBanner } from "./ui.js";
 import { scheduleSessionSave } from "./session.js";
 import { t } from "./i18n.js";
 import { APP_NAME } from "./constants.js";
@@ -75,6 +75,7 @@ export async function openPath(path, { activate = true } = {}) {
     encoding: out.encoding,
     eol: out.eol,
     lang: langForPath(path),
+    mtimeMs: out.mtime,
     // 文件级提示归属本标签：仅在该标签激活时显示（v1.7）
     banner: out.lossy ? { message: t("banner.lossy") } : null,
   });
@@ -113,7 +114,7 @@ export async function saveTab(tab, { as = false } = {}) {
     path = await saveDialog(tab.path ? tab.title : timestampTxtName());
     if (!path) return false;
   }
-  await invoke("save_file", {
+  tab.mtimeMs = await invoke("save_file", {
     path,
     text: tab.text,
     encoding: tab.encoding,
@@ -234,4 +235,101 @@ export function switchTab(id) {
 
 export function refreshTabs() {
   window.dispatchEvent(new CustomEvent("tabs-refresh"));
+}
+
+// ===== 文件变更监视与重新加载（v1.8）=====
+// 每 2 秒查询当前激活标签对应磁盘文件的修改时间；发现外部修改时弹确认框，
+// 确定后从磁盘重读内容（未保存修改会随重载丢弃，弹框文案会提前告知）。
+
+let promptBusy = false;
+
+export function startFileWatcher() {
+  setInterval(pollActiveFileChange, 2000);
+}
+
+async function pollActiveFileChange() {
+  if (promptBusy || state.settingsOpen) return;
+  const tab = activeTab();
+  if (!tab || !tab.path || tab.lang === "pdf") return; // PDF 走独立查看器，不参与文本重载
+  if (!document.hasFocus()) return; // 窗口不在前台 = 用户没在看，不打扰，回到前台后再提示
+  let mtime;
+  try {
+    mtime = await invoke("get_file_mtime", { path: tab.path });
+  } catch (e) {
+    return;
+  }
+  if (mtime === null) return; // 文件被删除/不可访问：静默，等用户主动操作时再报错
+  if (tab.mtimeMs == null) {
+    tab.mtimeMs = mtime; // 尚无基线（会话恢复等）：先记录快照，不提示
+    return;
+  }
+  if (mtime === tab.mtimeMs) return;
+  promptBusy = true;
+  try {
+    persistActiveFromEditor();
+    const choice = await showDialog({
+      title: t("dialog.fileChangedTitle"),
+      body: tab.dirty
+        ? t("dialog.fileChangedDirtyBody", { name: tab.title })
+        : t("dialog.fileChangedBody", { name: tab.title }),
+      lock: true, // 严格模态：必须点确定/取消，点遮罩或 Esc 不关闭
+      buttons: [
+        { label: t("dialog.ok"), primary: true, value: "reload" },
+        { label: t("dialog.cancel"), value: null },
+      ],
+    });
+    if (choice === "reload") await reloadTabFromDisk(tab);
+    else tab.mtimeMs = mtime; // 取消：以当前磁盘版本为新基线，同一版本不再重复提示
+  } finally {
+    promptBusy = false;
+  }
+}
+
+// 从磁盘重读文件并整块替换标签内容。走 loadActiveIntoEditor 的 setState 路径，
+// 不触发 handleCmUpdate 的 docChanged，重载后标签恢复干净状态。
+export async function reloadTabFromDisk(tab) {
+  if (!tab || !tab.path) return false;
+  let out;
+  try {
+    out = await invoke("read_file", { path: tab.path });
+  } catch (e) {
+    showDialog({ title: t("dialog.openError"), body: String(e) });
+    return false;
+  }
+  tab.text = out.text;
+  tab.encoding = out.encoding;
+  tab.eol = out.eol;
+  tab.dirty = false;
+  tab.mtimeMs = out.mtime;
+  tab.banner = out.lossy ? { message: t("banner.lossy") } : null;
+  if (tab.id === state.activeId) {
+    loadActiveIntoEditor();
+    syncTabBanner();
+    document.title = `${tab.title} - ${APP_NAME}`;
+    // 无论哪条路径触发重载（文件变更确认 / 右键菜单），都在编辑区上方给一条反馈
+    showBanner({ message: t("banner.reloaded"), info: true, autoHideMs: 2000 });
+  }
+  refreshTabs();
+  scheduleSessionSave();
+  return true;
+}
+
+// 右键菜单“重新加载文件”：干净文件直接重载；有未保存修改时先确认，防误丢内容
+export async function reloadActiveFile() {
+  const tab = activeTab();
+  if (!tab || !tab.path || tab.lang === "pdf") return;
+  persistActiveFromEditor();
+  if (tab.dirty) {
+    const choice = await showDialog({
+      title: t("dialog.reloadConfirmTitle"),
+      body: t("dialog.reloadConfirmBody", { name: tab.title }),
+      lock: true,
+      buttons: [
+        { label: t("dialog.ok"), primary: true, value: "reload" },
+        { label: t("dialog.cancel"), value: null },
+      ],
+    });
+    if (choice !== "reload") return;
+  }
+  await reloadTabFromDisk(tab);
 }

@@ -12,6 +12,7 @@ import {
 } from "./editor.js";
 import {
   openFile, newTab, saveActive, saveActiveAs, saveAll, closeTab, printDocument,
+  reloadActiveFile,
 } from "./files.js";
 import { openSettings } from "./settings.js";
 
@@ -104,6 +105,13 @@ function editItems() {
         shortcut: f.shortcut || undefined,
         action: () => runFormatter(f),
       })),
+    },
+    { sep: true },
+    // 重新加载文件（v1.8）：仅对已落盘的文本文件可用；PDF 走独立查看器不支持
+    {
+      label: t("edit.reloadFile"),
+      disabled: !(tab && tab.path && tab.lang !== "pdf"),
+      action: reloadActiveFile,
     },
   ];
 }
