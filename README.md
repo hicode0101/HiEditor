@@ -13,7 +13,7 @@
 
 简体中文 | [English](README.en-US.md)
 
-注：本工具推荐在 Win10 或以上平台运行。
+注：本工具推荐在 Windows 10+、Mac os、Linux 桌面运行。
 
 </div>
 
