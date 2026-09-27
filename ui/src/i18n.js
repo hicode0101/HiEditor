@@ -8,6 +8,7 @@ const ZH = {
   "menu.view": "查看",
 
   "file.newTab": "新建标签页",
+  "file.newBrowserTab": "新建浏览器选项卡",
   "file.newWindow": "新建窗口",
   "file.open": "打开…",
   "file.openRecent": "打开最近所用文件",
@@ -105,6 +106,13 @@ const ZH = {
   "tab.menu.closeOthers": "关闭其它选项卡",
   "tab.menu.save": "保存",
   "tab.menu.saveAs": "另存为",
+
+  "browser.back": "后退",
+  "browser.forward": "前进",
+  "browser.reload": "刷新（F5）",
+  "browser.addressPlaceholder": "输入网址或本地路径，回车打开",
+  "browser.newTab": "浏览器",
+  "browser.relLinkUnsaved": "文件尚未保存，无法解析相对链接。",
 
   "dialog.saveConfirm": "是否将更改保存到 {name}?",
   "dialog.save": "保存",
@@ -253,6 +261,7 @@ const EN = {
   "menu.view": "View",
 
   "file.newTab": "New Tab",
+  "file.newBrowserTab": "New Browser Tab",
   "file.newWindow": "New Window",
   "file.open": "Open…",
   "file.openRecent": "Open Recent",
@@ -350,6 +359,13 @@ const EN = {
   "tab.menu.closeOthers": "Close Other Tabs",
   "tab.menu.save": "Save",
   "tab.menu.saveAs": "Save As",
+
+  "browser.back": "Back",
+  "browser.forward": "Forward",
+  "browser.reload": "Reload (F5)",
+  "browser.addressPlaceholder": "Enter a URL or local path, press Enter to open",
+  "browser.newTab": "Browser",
+  "browser.relLinkUnsaved": "The file is not saved; relative links cannot be resolved.",
 
   "dialog.saveConfirm": "Save changes to {name}?",
   "dialog.save": "Save",
@@ -545,13 +561,16 @@ export function t(key, params) {
   return s;
 }
 
-/** 把静态 DOM 上带 data-i18n / data-i18n-title 的元素全部刷新为当前语言 */
+/** 把静态 DOM 上带 data-i18n / data-i18n-title / data-i18n-placeholder 的元素全部刷新为当前语言 */
 export function applyI18n() {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     el.textContent = t(el.dataset.i18n);
   });
   document.querySelectorAll("[data-i18n-title]").forEach((el) => {
     el.title = t(el.dataset.i18nTitle);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
   });
   document.documentElement.lang = eff;
 }

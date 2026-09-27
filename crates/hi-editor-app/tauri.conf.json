@@ -9,20 +9,13 @@
   },
   "app": {
     "withGlobalTauri": true,
-    "windows": [
-      {
-        "label": "main",
-        "title": "无标题 - HiEditor",
-        "width": 1012,
-        "height": 561,
-        "minWidth": 500,
-        "minHeight": 400,
-        "decorations": false,
-        "center": true
-      }
-    ],
+    "windows": [],
     "security": {
-      "csp": null
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["**"]
+      }
     }
   },
   "bundle": {

@@ -589,8 +589,11 @@ fn read_binary_file(path: String) -> Result<tauri::ipc::Response, String> {
 
 #[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
-    // 白名单校验，防止经 start/xdg-open 注入参数。
-    if !url.starts_with("https://") || url.chars().any(|c| c.is_whitespace() || c == '"') {
+    // 白名单校验：网页 / 邮件 / 本地文件链接（md 预览链接与设置页外链共用入口），
+    // 拒绝含空白或引号的输入。经 explorer 直接收参数而非 cmd start，
+    // 避免 cmd 把 URL 中的 & | 等元字符当命令分隔符的注入风险。
+    let allowed = ["https://", "http://", "mailto:", "file:///"].iter().any(|p| url.starts_with(p));
+    if !allowed || url.chars().any(|c| c.is_whitespace() || c == '"') {
         return Err("非法的 URL".into());
     }
     #[cfg(target_os = "windows")]
@@ -598,8 +601,20 @@ fn open_url(url: String) -> Result<(), String> {
         // CREATE_NO_WINDOW：避免 windows_subsystem=windows 的正式版闪现命令行黑框
         use std::os::windows::process::CommandExt;
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-        std::process::Command::new("cmd")
-            .args(["/c", "start", "", &url])
+        let target = if let Some(rest) = url.strip_prefix("file:///") {
+            // 本地文件：解码 percent-encoding 还原为磁盘路径，explorer 按默认关联打开
+            // （.html/.htm 的默认关联即系统默认浏览器）
+            let mut path = percent_decode(rest).replace('/', "\\");
+            let second = path.as_bytes().get(1).copied();
+            if second != Some(b':') && !path.starts_with('\\') {
+                path.insert(0, '\\'); // POSIX 形态（file:///home/x）补回根斜杠
+            }
+            path
+        } else {
+            url
+        };
+        std::process::Command::new("explorer")
+            .arg(&target)
             .creation_flags(CREATE_NO_WINDOW)
             .spawn()
             .map_err(|e| format!("打开失败：{e}"))?;
@@ -813,6 +828,26 @@ fn main() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .setup(move |app| {
+            // 主窗口由代码构建（v1.9）：注册 on_new_window 拦截所有新窗口请求 ——
+            // 页面/iframe 里的 target=_blank、window.open 不再弹原生窗口（默认行为是
+            // 直接吞掉，表现为"点了没反应"），http/https 转发给前端新开浏览器选项卡，
+            // 其余协议一律拒绝。配置原在 tauri.conf.json windows 数组中。
+            let handle = app.handle().clone();
+            tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("index.html".into()))
+                .title("无标题 - HiEditor")
+                .inner_size(1012.0, 561.0)
+                .min_inner_size(500.0, 400.0)
+                .decorations(false)
+                .center()
+                .on_new_window(move |url, _features| {
+                    let url = url.to_string();
+                    if url.starts_with("http://") || url.starts_with("https://") {
+                        let _ = handle.emit("browser-open-url", url);
+                    }
+                    tauri::webview::NewWindowResponse::Deny
+                })
+                .build()?;
+
             let host = init_host(app.handle());
             app.manage(HostCell(Mutex::new(host)));
             app.manage(LaunchFile(Mutex::new(launch_file)));

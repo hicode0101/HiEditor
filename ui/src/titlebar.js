@@ -5,6 +5,7 @@ import { ICONS, setIcon } from "./icons.js";
 import { openMenu, closeFlyout, bindTooltip } from "./ui.js";
 import { t } from "./i18n.js";
 import { newTab, switchTab, closeTab, saveTab } from "./files.js";
+import { isBrowserTab } from "./browser.js";
 
 // 标签拖拽状态（指针式实现：Tauri 原生文件拖放拦截会禁用 HTML5 dnd，故用 mousedown/mousemove 手动换位）
 let dragCtx = null; // { tabId, startX, startY, moved }
@@ -86,6 +87,7 @@ function tabTitle(tab) {
 }
 
 function tabTooltip(tab) {
+  if (isBrowserTab(tab)) return tab.url || tabTitle(tab); // 浏览器标签：tooltip 显示当前网址
   if (!tab.path) return t("tab.tooltipUnsaved", { name: tabTitle(tab) });
   return tab.dirty ? t("tab.tooltipDirty", { path: tab.path }) : tab.path;
 }
@@ -166,10 +168,10 @@ function tabMenuItems(tabId) {
     { sep: true },
     {
       label: t("tab.menu.save"),
-      disabled: !tab.dirty && !!tab.path,
+      disabled: isBrowserTab(tab) || (!tab.dirty && !!tab.path),
       action: () => saveTab(tab),
     },
-    { label: t("tab.menu.saveAs"), action: () => saveTab(tab, { as: true }) },
+    { label: t("tab.menu.saveAs"), disabled: isBrowserTab(tab), action: () => saveTab(tab, { as: true }) },
     // 文件位置操作（未保存到磁盘的标签不可用）
     { sep: true },
     { label: t("tab.menu.openFolder"), disabled: !tab.path, action: () => revealInFileManager(tab.path) },

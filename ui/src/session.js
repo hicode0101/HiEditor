@@ -25,6 +25,12 @@ export function tabSessionData(tab) {
     scroll: tab.scroll,
     cursor: tab.cursor,
   };
+  if (tab.lang === "browser") {
+    // 浏览器标签：无文本缓冲，只记地址（恢复时重建导航栈）
+    d.url = tab.url || "";
+    d.path = null;
+    return d;
+  }
   if (includeText) d.text = tab.text;
   return d;
 }

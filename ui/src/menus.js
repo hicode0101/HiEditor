@@ -15,6 +15,7 @@ import {
   reloadActiveFile,
 } from "./files.js";
 import { openSettings } from "./settings.js";
+import { newBrowserTab, isBrowserTab } from "./browser.js";
 
 function recentList() {
   return JSON.parse(localStorage.getItem("hi-recents") || "[]");
@@ -23,6 +24,7 @@ function recentList() {
 function fileItems() {
   return [
     { label: t("file.newTab"), shortcut: "Ctrl+N", action: newTab },
+    { label: t("file.newBrowserTab"), action: () => newBrowserTab() },
     { label: t("file.newWindow"), shortcut: "Ctrl+Shift+N", disabled: true }, // M2（FR-11 多窗口）
     { sep: true },
     { label: t("file.open"), shortcut: "Ctrl+O", action: openFile },
@@ -51,7 +53,7 @@ function fileItems() {
     { label: t("file.saveAs"), shortcut: "Ctrl+Shift+S", action: saveActiveAs },
     { label: t("file.saveAll"), shortcut: "Ctrl+Alt+S", action: saveAll, disabled: !state.tabs.some((t) => t.dirty || !t.path) },
     { sep: true },
-    { label: t("file.print"), shortcut: "Ctrl+P", action: printDocument },
+    { label: t("file.print"), shortcut: "Ctrl+P", disabled: isBrowserTab(activeTab()), action: printDocument },
     { sep: true },
     { label: t("file.closeTab"), shortcut: "Ctrl+W", action: () => activeTab() && closeTab(activeTab().id) },
     { label: t("file.closeWindow"), shortcut: "Ctrl+Shift+W", action: () => window.__TAURI__.window.getCurrentWindow().close() },

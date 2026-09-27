@@ -106,7 +106,7 @@ export function newTab() {
 }
 
 export async function saveTab(tab, { as = false } = {}) {
-  if (tab.lang === "pdf") return false; // PDF 只读，不提供保存
+  if (tab.lang === "pdf" || tab.lang === "browser") return false; // 只读视图标签，不提供保存
   persistActiveFromEditor();
   let path = tab.path;
   if (!path || as) {

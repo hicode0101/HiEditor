@@ -8,6 +8,7 @@ import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
 import { initMarkdownPreview, renderMdPreview, syncMdSegButtons } from "./mdpreview.js";
 import { initPdfViewer, isPdfTab, renderPdfTab, zoomPdf, resetPdfZoom } from "./pdfviewer.js";
+import { initBrowserViewer, isBrowserTab, renderBrowserTab, browserReload, newBrowserTab } from "./browser.js";
 import { syncTabBanner } from "./ui.js";
 import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument, startFileWatcher } from "./files.js";
 import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance, openFind, openReplace } from "./editor.js";
@@ -39,6 +40,7 @@ async function boot() {
   initEditorContextMenu();
   initMarkdownPreview();
   initPdfViewer();
+  initBrowserViewer();
 
   state.registry = await invoke("get_registry");
   state.settings = await invoke("get_settings");
@@ -119,7 +121,12 @@ async function restoreSession() {
 
   let restoredCount = 0;
   for (const st of sess.tabs) {
-    if (st.path && st.text === undefined) {
+    if (st.lang === "browser") {
+      // 浏览器标签：无文本缓冲，只恢复地址并重建导航栈
+      const bt = newBrowserTab(st.url || "", { activate: false });
+      if (st.title) bt.title = st.title;
+      restoredCount++;
+    } else if (st.path && st.text === undefined) {
       // 干净的有路径标签：从磁盘重读
       try {
         const t = await openPath(st.path, { activate: false });
@@ -217,8 +224,8 @@ function switchToolbar() {
     if (el.id === "toolbar-font") return; // 默认栏最后统一处理
     el.hidden = el !== custom;
   });
-  // 默认工具栏：仅 字体/字号（PDF 标签整个隐藏，查看器有自己的 pdf-bar）
-  document.getElementById("toolbar-font").hidden = !!custom || isPdfTab(tab);
+  // 默认工具栏：仅 字体/字号（PDF / 浏览器标签整个隐藏，二者有自己的专属工具栏）
+  document.getElementById("toolbar-font").hidden = !!custom || isPdfTab(tab) || isBrowserTab(tab);
   syncFontControls();
   applyTabFont();
   updateToolbarOverflow(); // 容器切换后重测溢出收纳
@@ -229,6 +236,10 @@ function bindGlobalKeys() {
     if (state.settingsOpen) return; // 设置模态框打开期间阻塞全局快捷键（Esc 关闭由 settings.js 处理）
     const ctrl = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
+    // 输入框（地址栏 / 页码框 / 查找面板等）内的编辑快捷键交给原生行为，
+    // 避免 Ctrl+A 全选等误落到隐藏的编辑器上；F5 保留以便在地址栏直接刷新
+    const tag = e.target && e.target.tagName;
+    if ((tag === "INPUT" || tag === "TEXTAREA") && key !== "f5") return;
     if (ctrl && !e.shiftKey && key === "n") { e.preventDefault(); newTab(); }
     else if (ctrl && !e.shiftKey && key === "t") { e.preventDefault(); newTab(); }
     else if (ctrl && !e.shiftKey && key === "o") { e.preventDefault(); openFile(); }
@@ -243,7 +254,7 @@ function bindGlobalKeys() {
     else if (ctrl && key === "-") { e.preventDefault(); isPdfTab(activeTab()) ? zoomPdf(-0.2) : zoom(-10); }
     else if (ctrl && key === "0") { e.preventDefault(); isPdfTab(activeTab()) ? resetPdfZoom() : zoom(0); }
     else if (e.altKey && key === "z") { e.preventDefault(); toggleWrap(); }
-    else if (key === "f5") { e.preventDefault(); insertTimeDate(); }
+    else if (key === "f5") { e.preventDefault(); isBrowserTab(activeTab()) ? browserReload() : insertTimeDate(); }
     else if (ctrl && e.shiftKey && key === "j") { e.preventDefault(); runFormatterById("json.pretty"); }
     else if (ctrl && e.altKey && key === "j") { e.preventDefault(); runFormatterById("json.minify"); }
     else if (ctrl && e.shiftKey && key === "l") { e.preventDefault(); runFormatterById("xml.pretty"); }
@@ -279,23 +290,28 @@ function zoom(delta) {
   setZoom(next);
 }
 
-// 内容视图统一仲裁（v1.7）：编辑区 / md 预览 / pdf 查看三选一
+// 内容视图统一仲裁（v1.7 / v1.9）：编辑区 / md 预览 / pdf 查看器 / 浏览器视图四选一
 function syncContentView() {
   const tab = activeTab();
   const isPdf = isPdfTab(tab);
+  const isBrowser = isBrowserTab(tab);
   const isMd = !!(tab && tab.lang === "markdown");
   const mdPreview = isMd && tab.mode === "wysiwyg";
   syncMdSegButtons(); // 编辑/预览分段按钮高亮跟随当前标签的模式
-  document.getElementById("editor").hidden = isPdf || mdPreview;
+  document.getElementById("editor").hidden = isPdf || mdPreview || isBrowser;
   document.getElementById("md-bar").hidden = !isMd;
   document.getElementById("md-preview").hidden = !(isMd && mdPreview);
   document.getElementById("pdf-bar").hidden = !isPdf;
   document.getElementById("pdf-view").hidden = !isPdf;
-  document.getElementById("statusbar").hidden = isPdf; // PDF 只读：行/列、语言、编码均无意义
+  document.getElementById("browser-bar").hidden = !isBrowser;
+  document.getElementById("browser-view").hidden = !isBrowser;
+  document.getElementById("statusbar").hidden = isPdf || isBrowser; // 只读视图：行/列、语言、编码均无意义
   if (isMd && mdPreview) {
     import("./mdpreview.js").then((m) => m.renderMdPreview());
   } else if (isPdf) {
     import("./pdfviewer.js").then((m) => m.renderPdfTab());
+  } else if (isBrowser) {
+    renderBrowserTab();
   }
 }
 

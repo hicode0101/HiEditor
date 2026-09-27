@@ -5,6 +5,7 @@
 import { state, activeTab } from "./state.js";
 import { t } from "./i18n.js";
 import { initCopyContextMenu } from "./ui.js";
+import { openLinkFromPreview } from "./browser.js";
 
 const invoke = (...args) => window.__TAURI__.core.invoke(...args);
 
@@ -109,6 +110,16 @@ export function initMarkdownPreview() {
     const btn = e.target.closest("[data-mdmode]");
     if (!btn) return;
     setMarkdownMode(btn.dataset.mdmode === "preview" ? "wysiwyg" : "source");
+  });
+  // 预览内超链接（v1.9）：一律阻止就地导航（否则会整页跳走冲掉编辑器），
+  // 调用系统默认浏览器打开；仅页内锚点（#...）保留默认的预览内跳转
+  document.getElementById("md-preview").addEventListener("click", (e) => {
+    const a = e.target.closest("a[href]");
+    if (!a) return;
+    if (openLinkFromPreview(a.getAttribute("href"), activeTab())) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   });
   // 预览区右键复制菜单 + Ctrl+C（共享 helper，与 PDF 文本层同一套）
   initCopyContextMenu(document.getElementById("md-preview"));
