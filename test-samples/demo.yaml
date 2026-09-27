@@ -1,0 +1,39 @@
+# YAML 注释，以 # 开头
+# 键值对
+name: 五星红旗
+version: 1.0
+enable: true
+price: 99.99
+desc: "这是一段字符串，也可以不加引号"
+
+# 列表（数组）
+tags:
+  - yaml
+  - config
+  - demo
+
+# 嵌套对象
+author:
+  name: 张三
+  email: zhangsan@example.com
+  address:
+    province: 湖南
+    city: 长沙
+
+# 行内写法（对象+数组）
+inline_obj: {a: 1, b: 2}
+inline_list: [apple, banana, orange]
+
+# 多行文本
+long_text: |
+  第一行文字
+  第二行文字
+  保留换行符
+
+fold_text: >
+  这是一段长文本，
+  换行将会被替换成空格，
+  段落合并。
+
+# 空值
+empty_val: null
