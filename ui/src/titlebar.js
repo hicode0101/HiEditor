@@ -28,6 +28,14 @@ export function initTitlebar() {
     window.__TAURI__.window.getCurrentWindow().close()
   );
 
+  // 双击标题栏 / Win+↑ 等原生路径的最大化不经过前端，靠 resize 事件防抖后同步图标
+  const win = window.__TAURI__.window.getCurrentWindow();
+  let resizeTimer = null;
+  win.onResized(() => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(syncCaptionGlyph, 150);
+  });
+
   const tabs = document.getElementById("tabs");
   tabs.addEventListener("wheel", (e) => {
     tabs.scrollLeft += e.deltaY;
