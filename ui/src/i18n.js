@@ -85,7 +85,7 @@ const ZH = {
   "toolbar.editMode": "切换编辑模式（源码 ⇄ 所见即所得）",
   "toolbar.modeWysiwyg": "所见即所得 模式",
   "toolbar.modeSource": "源码 模式",
-  "banner.wysiwygPending": "所见即所得引擎将在后续里程碑接入，当前以源码形态显示。",
+  "toast.wysiwygPending": "所见即所得引擎将在后续里程碑接入，当前以源码形态显示。",
 
   "status.lineCol": "行 {line}, 列 {col}",
   "status.lineCol0": "行 1, 列 1",
@@ -126,7 +126,7 @@ const ZH = {
   "dialog.fileChangedDirtyBody": "“{name}”已在磁盘上被修改，且当前标签有未保存的修改，重新加载将丢弃这些修改。是否重新加载？",
   "dialog.reloadConfirmTitle": "重新加载文件",
   "dialog.reloadConfirmBody": "“{name}”有未保存的修改，重新加载将丢弃这些修改。是否继续？",
-  "banner.reloaded": "已重新加载",
+  "toast.reloaded": "已重新加载",
   "edit.reloadFile": "重新加载文件",
   "settings.saveFailed": "保存设置失败",
   "plugins.loadFailed": "插件列表获取失败",
@@ -157,11 +157,11 @@ const ZH = {
   "dialog.pluginToggleTitle": "已更新插件开关",
   "dialog.pluginToggleBody": "开关已写入插件的 config.json，重启 HiEditor 后生效。",
 
-  "banner.restored": "已恢复上次的会话",
-  "banner.lossy": "部分字符无法正确解码，已按检测编码打开。",
-  "banner.pasteTip": "请在编辑区内按 Ctrl+V 粘贴。",
-  "banner.copied": "已复制到剪贴板",
-  "banner.wysiwygPending": "所见即所得引擎将在后续里程碑接入，当前以源码模式显示 Markdown。",
+  "toast.restored": "已恢复上次的会话",
+  "toast.lossy": "部分字符无法正确解码，已按检测编码打开。",
+  "toast.pasteTip": "请在编辑区内按 Ctrl+V 粘贴。",
+  "toast.copied": "已复制到剪贴板",
+  "toast.wysiwygPending": "所见即所得引擎将在后续里程碑接入，当前以源码模式显示 Markdown。",
 
   "drop.overlay": "松开以在 HiEditor 中打开",
 
@@ -249,7 +249,7 @@ const ZH = {
   "tab.menu.openFolder": "打开所在文件夹",
   "tab.menu.copyDir": "复制当前目录路径",
   "tab.menu.copyPath": "复制当前文件路径",
-  "banner.copied": "已复制到剪贴板",
+  "toast.copied": "已复制到剪贴板",
 
   "openError.title": "打开失败",
 };
@@ -338,7 +338,7 @@ const EN = {
   "toolbar.editMode": "Switch edit mode (source ⇄ WYSIWYG)",
   "toolbar.modeWysiwyg": "WYSIWYG mode",
   "toolbar.modeSource": "Source mode",
-  "banner.wysiwygPending": "The WYSIWYG engine arrives in a later milestone; source view is used for now.",
+  "toast.wysiwygPending": "The WYSIWYG engine arrives in a later milestone; source view is used for now.",
 
   "status.lineCol": "Ln {line}, Col {col}",
   "status.lineCol0": "Ln 1, Col 1",
@@ -379,7 +379,7 @@ const EN = {
   "dialog.fileChangedDirtyBody": "\"{name}\" has been modified on disk, and this tab has unsaved changes. Reloading will discard them. Reload anyway?",
   "dialog.reloadConfirmTitle": "Reload File",
   "dialog.reloadConfirmBody": "\"{name}\" has unsaved changes. Reloading will discard them. Continue?",
-  "banner.reloaded": "Reloaded",
+  "toast.reloaded": "Reloaded",
   "edit.reloadFile": "Reload File",
   "settings.saveFailed": "Save Failed",
   "plugins.loadFailed": "Failed to Load Plugins",
@@ -410,11 +410,11 @@ const EN = {
   "dialog.pluginToggleTitle": "Plugin Toggle Updated",
   "dialog.pluginToggleBody": "The switch has been written to the plugin's config.json. Restart HiEditor to apply.",
 
-  "banner.restored": "Previous session restored",
-  "banner.lossy": "Some characters could not be decoded; opened with the detected encoding.",
-  "banner.pasteTip": "Please press Ctrl+V inside the editor to paste.",
-  "banner.copied": "Copied to clipboard",
-  "banner.wysiwygPending": "The WYSIWYG engine arrives in a later milestone; Markdown is shown in source mode for now.",
+  "toast.restored": "Previous session restored",
+  "toast.lossy": "Some characters could not be decoded; opened with the detected encoding.",
+  "toast.pasteTip": "Please press Ctrl+V inside the editor to paste.",
+  "toast.copied": "Copied to clipboard",
+  "toast.wysiwygPending": "The WYSIWYG engine arrives in a later milestone; Markdown is shown in source mode for now.",
 
   "drop.overlay": "Drop to open in HiEditor",
 
@@ -502,7 +502,7 @@ const EN = {
   "tab.menu.openFolder": "Open Containing Folder",
   "tab.menu.copyDir": "Copy Directory Path",
   "tab.menu.copyPath": "Copy File Path",
-  "banner.copied": "Copied to clipboard",
+  "toast.copied": "Copied to clipboard",
 
   "openError.title": "Open Failed",
 };

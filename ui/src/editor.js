@@ -300,8 +300,8 @@ export async function pasteFromClipboard() {
     }
   } catch (e) {
     // 读取被拒时提示用户用原生 Ctrl+V（CM6 原生支持）
-    const { showBanner } = await import("./ui.js");
-    showBanner({ message: t("banner.pasteTip"), info: true, autoHideMs: 2000 });
+    const { showToast } = await import("./ui.js");
+    showToast({ message: t("toast.pasteTip"), info: true, autoHideMs: 2000 });
   }
 }
 

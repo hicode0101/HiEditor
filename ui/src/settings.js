@@ -168,8 +168,8 @@ function createShortcutButton() {
     btn.disabled = true;
     try {
       await invoke("create_desktop_shortcut");
-      const { showBanner } = await import("./ui.js");
-      showBanner({ message: t("settings.shortcutCreated"), info: true, autoHideMs: 2500 });
+      const { showToast } = await import("./ui.js");
+      showToast({ message: t("settings.shortcutCreated"), info: true, autoHideMs: 2500 });
     } catch (e) {
       showDialog({ title: t("settings.opFailed"), body: String(e) });
     } finally {
@@ -365,8 +365,8 @@ function miniBtn(label, action) {
 async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
-    const { showBanner } = await import("./ui.js");
-    showBanner({ message: t("about.copied"), info: true, autoHideMs: 1500 });
+    const { showToast } = await import("./ui.js");
+    showToast({ message: t("about.copied"), info: true, autoHideMs: 1500 });
   } catch (e) {
     showDialog({ title: t("dialog.copyFailed"), body: String(e) });
   }

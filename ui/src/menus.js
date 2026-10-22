@@ -2,7 +2,7 @@
 
 import { state, activeTab, formattersFor } from "./state.js";
 import { t } from "./i18n.js";
-import { openMenu, closeFlyout, showDialog, showBanner } from "./ui.js";
+import { openMenu, closeFlyout, showDialog } from "./ui.js";
 import { setMarkdownMode } from "./mdpreview.js";
 import {
   focusEditor, getSelectionRange, replaceSelection, setHeading, isWrapOn,

@@ -9,7 +9,7 @@ import { openSettings, closeSettings } from "./settings.js";
 import { initMarkdownPreview, renderMdPreview, syncMdSegButtons } from "./mdpreview.js";
 import { initPdfViewer, isPdfTab, renderPdfTab, zoomPdf, resetPdfZoom } from "./pdfviewer.js";
 import { initBrowserViewer, isBrowserTab, renderBrowserTab, browserReload, newBrowserTab } from "./browser.js";
-import { syncTabBanner } from "./ui.js";
+import { syncTabNotice } from "./ui.js";
 import { newTab, switchTab, openPath, openFile, saveActive, saveActiveAs, saveAll, closeTab, printDocument, startFileWatcher } from "./files.js";
 import { setZoom, setWrap, isWrapOn, updateStatus, editorHostEl, getDocText, replaceDoc, setEditorDark, initEditorInstance, openFind, openReplace } from "./editor.js";
 import { setIcon } from "./icons.js";
@@ -165,8 +165,8 @@ async function restoreSession() {
     state.tabs[state.tabs.length - 1];
   switchTab(actTab.id);
 
-  const { showBanner } = await import("./ui.js");
-  showBanner({ message: i18n.t("banner.restored"), info: true, autoHideMs: 3000 });
+  const { showToast } = await import("./ui.js");
+  showToast({ message: i18n.t("toast.restored"), info: true, autoHideMs: 3000 });
   return true;
 }
 
@@ -273,7 +273,7 @@ function bindGlobalKeys() {
   window.addEventListener("zoom", (e) => zoom(e.detail));
   window.addEventListener("toggle-wrap", toggleWrap);
   window.addEventListener("request-save", saveActive);
-  const syncTabUi = () => { switchToolbar(); syncTabBanner(); syncContentView(); }; // 切标签：工具栏 + 标签横幅 + 内容视图一并同步
+  const syncTabUi = () => { switchToolbar(); syncTabNotice(); syncContentView(); }; // 切标签：工具栏 + 标签提示 + 内容视图一并同步
   window.addEventListener("tab-switched", syncTabUi);
   window.addEventListener("tabs-refresh", syncTabUi);
   window.addEventListener("settings-changed", switchToolbar);

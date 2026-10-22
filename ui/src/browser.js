@@ -211,8 +211,8 @@ export function openLinkFromPreview(href, tab) {
   const dir = tab && tab.path ? tab.path.replace(/[\\/][^\\/]*$/, "").replace(/\\/g, "/") : "";
   if (!dir) {
     import("./ui.js")
-      .then(({ showBanner }) =>
-        showBanner({ message: t("browser.relLinkUnsaved"), info: true, autoHideMs: 3000 })
+      .then(({ showToast }) =>
+        showToast({ message: t("browser.relLinkUnsaved"), info: true, autoHideMs: 3000 })
       )
       .catch(() => {});
     return true;

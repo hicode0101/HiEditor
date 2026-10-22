@@ -2,7 +2,7 @@
 
 import { state, activeTab, newTabModel, langForPath } from "./state.js";
 import { loadActiveIntoEditor, persistActiveFromEditor } from "./editor.js";
-import { showDialog, showBanner, syncTabBanner } from "./ui.js";
+import { showDialog, showToast, syncTabNotice } from "./ui.js";
 import { scheduleSessionSave } from "./session.js";
 import { t } from "./i18n.js";
 import { APP_NAME } from "./constants.js";
@@ -76,13 +76,13 @@ export async function openPath(path, { activate = true } = {}) {
     eol: out.eol,
     lang: langForPath(path),
     mtimeMs: out.mtime,
-    // 文件级提示归属本标签：仅在该标签激活时显示（v1.7）
-    banner: out.lossy ? { message: t("banner.lossy") } : null,
+    // 文件级提示归属本标签：切换到该标签时以 Toast 弹出（v1.7）
+    notice: out.lossy ? { message: t("toast.lossy") } : null,
   });
   state.tabs.push(tab);
   if (activate) switchTab(tab.id);
   else refreshTabs();
-  syncTabBanner(); // activate=false 时横幅等切换到该标签再显示
+  syncTabNotice(); // activate=false 时提示等切换到该标签再显示
   window.dispatchEvent(new CustomEvent("tab-updated", { detail: tab.id }));
   scheduleSessionSave();
   return tab;
@@ -160,8 +160,8 @@ export async function printDocument() {
   try {
     const r = await invoke("print_text", { title: tab.title, text: tab.text });
     if (r && r !== "cancelled") {
-      const { showBanner } = await import("./ui.js");
-      showBanner({ message: r, info: true, autoHideMs: 2500 });
+      const { showToast } = await import("./ui.js");
+      showToast({ message: r, info: true, autoHideMs: 2500 });
     }
     return;
   } catch (e) {
@@ -301,13 +301,13 @@ export async function reloadTabFromDisk(tab) {
   tab.eol = out.eol;
   tab.dirty = false;
   tab.mtimeMs = out.mtime;
-  tab.banner = out.lossy ? { message: t("banner.lossy") } : null;
+  tab.notice = out.lossy ? { message: t("toast.lossy") } : null;
   if (tab.id === state.activeId) {
     loadActiveIntoEditor();
-    syncTabBanner();
+    syncTabNotice();
     document.title = `${tab.title} - ${APP_NAME}`;
-    // 无论哪条路径触发重载（文件变更确认 / 右键菜单），都在编辑区上方给一条反馈
-    showBanner({ message: t("banner.reloaded"), info: true, autoHideMs: 2000 });
+    // 无论哪条路径触发重载（文件变更确认 / 右键菜单），都给一条弹出反馈
+    showToast({ message: t("toast.reloaded"), info: true, autoHideMs: 2000 });
   }
   refreshTabs();
   scheduleSessionSave();

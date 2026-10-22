@@ -207,8 +207,8 @@ async function copyTextToClipboard(text) {
     document.execCommand("copy");
     ta.remove();
   }
-  const { showBanner } = await import("./ui.js");
-  showBanner({ message: t("banner.copied"), info: true, autoHideMs: 1500 });
+  const { showToast } = await import("./ui.js");
+  showToast({ message: t("toast.copied"), info: true, autoHideMs: 1500 });
 }
 
 async function revealInFileManager(path) {

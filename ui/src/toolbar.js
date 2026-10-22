@@ -2,7 +2,7 @@
 // 默认工具栏（字体/字号）绑定见 main.js initFontControls
 
 import { activeTab } from "./state.js";
-import { openMenu, openPopover, closeFlyout, showBanner, bindTooltip } from "./ui.js";
+import { openMenu, openPopover, closeFlyout, bindTooltip } from "./ui.js";
 import { t } from "./i18n.js";
 import { scheduleSessionSave } from "./session.js";
 import {
