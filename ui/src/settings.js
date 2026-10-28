@@ -346,7 +346,7 @@ async function renderPlugins(panel) {
   panel.appendChild(rows);
 }
 
-// ===== 关于页扩展信息（开源地址 / 作者微信） =====
+// ===== 关于页扩展信息（官网 / 作者微信） =====
 
 const ABOUT = {
   repo: "https://github.com/hicode0101/HiTools",

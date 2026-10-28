@@ -239,7 +239,7 @@ const ZH = {
   "plugins.writeFailed": "写入失败",
 
   "about.desc": "跨平台轻量文本 / Markdown 编辑器（插件化架构）",
-  "about.source": "开源地址",
+  "about.source": "官网",
   "about.open": "打开",
   "about.copy": "复制",
   "about.wechat": "作者微信",
@@ -492,7 +492,7 @@ const EN = {
   "plugins.writeFailed": "Write Failed",
 
   "about.desc": "Cross-platform lightweight text / Markdown editor (plugin-based)",
-  "about.source": "Source Code",
+  "about.source": "Website",
   "about.open": "Open",
   "about.copy": "Copy",
   "about.wechat": "Author WeChat",
