@@ -1,7 +1,14 @@
-# HiEditor 多平台构建：
+# HiEditor 多平台构建（矩阵设计对齐 HiNote）：
 #   - 推送 v* 标签（如 v1.2.3）→ 四平台自动构建，zip 以该版本号命名，并自动创建 GitHub Release
 #   - tag 版本号会回写进 tauri.conf.json 再编译，exe 属性/关于页显示的版本与 tag、压缩包名三者统一
-#   - workflow_dispatch 手动触发保留：版本号取默认 1.0.0，不改写 tauri.conf.json
+#   - workflow_dispatch 手动触发：可在页面填版本号；留空则取默认 1.0.0，均不改写 tauri.conf.json
+#
+# 矩阵字段约定（与 HiNote 一致）：
+#   platform = runs-on 的 GitHub 托管 runner 标签；target = Rust 目标三元组
+#   两个 macOS 任务共用 macos-latest（M 系列 / arm64 机型），以 target 区分：
+#   原生 arm64 包 + 交叉编译 x86_64 包（GitHub 已淘汰 macos-13 Intel 机型）
+#   artifact = 产物标识（两个 mac 任务 platform 相同，artifact 名必须唯一）
+#
 # 如需恢复 push main 分支自动构建，在 on.push 下追加 branches: [main]
 
 name: Release Build
@@ -10,6 +17,11 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch: # 手动触发保留
+    inputs:
+      version:
+        description: '版本号（如 1.0.9，不带 v 前缀；留空 = 1.0.0）'
+        required: false
+        type: string
 
 jobs:
   build:
@@ -17,37 +29,42 @@ jobs:
       fail-fast: false # 一个平台失败不影响其它平台出包
       matrix:
         include:
-          - os: windows-latest # Windows x64
-            platform: win64
+          - platform: windows-latest # Windows x64
+            artifact: win64
             script: package-win-release.bat
-          - os: ubuntu-latest # Linux x64
-            platform: linux64
+          - platform: ubuntu-22.04 # Linux x64（固定 22.04：glibc 更低，产物兼容更多发行版）
+            artifact: linux64
             script: package-linux-release.sh
-          - os: macos‑latest # macOS Intel 包：GitHub 已淘汰 macos-13（Intel）机型，
-            platform: mac64 # 改在 arm64 机器上交叉编译 x86_64，Intel 支持不中断
+          - platform: macos-latest # macOS Apple Silicon（M 系列，arm64 原生）
+            artifact: mac-arm64
             script: package-mac-release.sh
-            rust-target: x86_64-apple-darwin
-          - os: macos‑latest # macOS Apple Silicon (M 系列)
-            platform: mac-arm64
+            target: aarch64-apple-darwin
+          - platform: macos-latest # macOS Intel（x86_64）：arm64 机型上交叉编译，Intel 支持不中断
+            artifact: mac64
             script: package-mac-release.sh
+            target: x86_64-apple-darwin
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
 
       - name: 安装 Rust 工具链
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.rust-target }} # 交叉编译目标（原生构建为空，无副作用）
+          targets: ${{ matrix.target }} # 交叉编译目标（原生构建为空，无副作用）
 
       - name: Cargo 编译缓存
         uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }} # 两个 mac 任务共用 macos-latest，以 target 区分缓存
 
-      - name: 计算版本号（tag v1.2.3 → 1.2.3，手动触发用默认 1.0.0）
+      - name: 计算版本号（tag v1.2.3 → 1.2.3；手动触发用输入值，缺省 1.0.0）
         id: ver
         shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.version }}" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
           else
             echo "version=1.0.0" >> "$GITHUB_OUTPUT"
@@ -63,27 +80,27 @@ jobs:
           echo "tauri.conf.json version → $(grep -o '"version": *"[^"]*"' crates/hi-editor-app/tauri.conf.json | head -1)"
 
       - name: 安装 Linux 构建依赖（Tauri v2）
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev build-essential \
             curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev zip
 
       - name: 打包（Windows）
-        if: matrix.os == 'windows-latest'
+        if: matrix.platform == 'windows-latest'
         shell: cmd
         env:
           CI: true
         run: echo N| package-win-release.bat ${{ steps.ver.outputs.version }}
 
       - name: 打包（Linux / macOS）
-        if: matrix.os != 'windows-latest'
+        if: matrix.platform != 'windows-latest'
         env:
           CI: true
         run: |
           chmod +x "${{ matrix.script }}"
           # 第 4 参 = Rust 交叉编译目标（原生构建为空）；第 2/3 参保持脚本默认
-          ./${{ matrix.script }} "${{ steps.ver.outputs.version }}" "" dist "${{ matrix.rust-target }}"
+          ./${{ matrix.script }} "${{ steps.ver.outputs.version }}" "" dist "${{ matrix.target }}"
 
       - name: 校验产物存在
         shell: bash
@@ -94,7 +111,7 @@ jobs:
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: HiEditor-${{ matrix.platform }}-v${{ steps.ver.outputs.version }}
+          name: HiEditor-${{ matrix.artifact }}-v${{ steps.ver.outputs.version }}
           path: dist/*.zip
           if-no-files-found: error
 
