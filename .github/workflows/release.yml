@@ -23,11 +23,11 @@ jobs:
           - os: ubuntu-latest # Linux x64
             platform: linux64
             script: package-linux-release.sh
-          - os: macos-14 # macOS Intel 包：GitHub 已淘汰 macos-13（Intel）机型，
+          - os: macos‑latest # macOS Intel 包：GitHub 已淘汰 macos-13（Intel）机型，
             platform: mac64 # 改在 arm64 机器上交叉编译 x86_64，Intel 支持不中断
             script: package-mac-release.sh
             rust-target: x86_64-apple-darwin
-          - os: macos-14 # macOS Apple Silicon (M 系列)
+          - os: macos‑latest # macOS Apple Silicon (M 系列)
             platform: mac-arm64
             script: package-mac-release.sh
 
