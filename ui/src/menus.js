@@ -190,9 +190,20 @@ export function initEditorContextMenu() {
   host.addEventListener("contextmenu", (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // 编辑项之外追加"自动换行"开关（与查看菜单 Alt+Z 同一事件通道，勾选态实时计算）
+    const items = [
+      ...editItems(),
+      { sep: true },
+      {
+        label: t("view.wordWrap"),
+        shortcut: "Alt+Z",
+        checked: isWrapOn(),
+        action: () => window.dispatchEvent(new CustomEvent("toggle-wrap")),
+      },
+    ];
     // 一次性游离锚点：避开 openMenu 的"同一锚点再点=收起"语义——
     // 否则第二次右键（锚点同为 #editor）只会关闭旧菜单而不会在新坐标重开
-    openMenu(document.createElement("span"), editItems(), { x: e.clientX, y: e.clientY });
+    openMenu(document.createElement("span"), items, { x: e.clientX, y: e.clientY });
   });
   // 左键点击编辑区：关闭仍打开的右键/下拉菜单（全局关闭器把 #editor 内的点击
   // 视为"点在锚点上"而跳过关闭，这里显式补一刀）

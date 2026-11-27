@@ -2,7 +2,7 @@
 // 导出 createEditor：含语言 compartment（JSON/XML/Markdown + code 插件 15 门语言高亮）、
 // 亮/暗主题 compartment、自动换行 compartment、撤销/重做（FR-17 高亮配色表在此落地）。
 
-import { EditorView, keymap, drawSelection, highlightActiveLine } from "@codemirror/view";
+import { EditorView, keymap, drawSelection, highlightActiveLine, lineNumbers } from "@codemirror/view";
 import { EditorState, Compartment } from "@codemirror/state";
 import {
   defaultKeymap, history, historyKeymap, indentWithTab, undo, redo,
@@ -20,7 +20,7 @@ import { go } from "@codemirror/lang-go";
 import { rust } from "@codemirror/lang-rust";
 import { sql } from "@codemirror/lang-sql";
 import { php } from "@codemirror/lang-php";
-import { StreamLanguage, syntaxHighlighting, HighlightStyle, indentUnit } from "@codemirror/language";
+import { StreamLanguage, syntaxHighlighting, HighlightStyle, indentUnit, foldGutter, foldKeymap } from "@codemirror/language";
 import { search, searchKeymap, openSearchPanel } from "@codemirror/search";
 import { yaml } from "@codemirror/legacy-modes/mode/yaml";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
@@ -131,6 +131,25 @@ function editorTheme(dark) {
       "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
         backgroundColor: dark ? "#294d6e" : "#add6ff",
       },
+      // 行号槽（图1）：无分隔边框，背景比编辑区略微加深一档；
+      // 字号/行高与 .cm-content 同源（CSS 变量联动），保证行号与内容行对齐
+      ".cm-gutters": {
+        backgroundColor: dark ? "rgba(0, 0, 0, 0.14)" : "rgba(0, 0, 0, 0.03)",
+        border: "none",
+        fontSize: "calc(var(--editor-font-size) * var(--zoom) / 100)",
+        lineHeight: "calc(var(--editor-font-size) * 1.5 * var(--zoom) / 100)",
+      },
+      ".cm-lineNumbers .cm-gutterElement": {
+        color: dark ? "#858585" : "#a1a1a1",
+      },
+      // 折叠槽箭头：与行号同色，悬停提亮
+      ".cm-foldGutter .cm-gutterElement": {
+        color: dark ? "#858585" : "#a1a1a1",
+        fontSize: "0.9em",
+      },
+      ".cm-foldGutter .cm-gutterElement:hover": {
+        color: dark ? "#d4d4d4" : "#1b1b1b",
+      },
     },
     { dark }
   );
@@ -201,13 +220,18 @@ export function createEditor(parent, { doc, langId, dark, wrap, tabWidth, onUpda
 
   const buildExtensions = (langId2, dark2, wrap2) => [
     history(),
-    keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
+    keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap, ...searchKeymap, indentWithTab]),
     search({ top: true }), // 查找/替换面板置顶（FR-4）
     EditorState.phrases.of(phraseMap),
     drawSelection(),
     langComp.of(langExtFor(langId2)),
     themeComp.of(themePack(dark2)),
     wrapComp.of(wrap2 ? EditorView.lineWrapping : []),
+    // 行号槽：编辑框左侧行号（图1 样式），全部文件类型通用
+    lineNumbers(),
+    // 折叠槽（图1 样式）：括号/结构块行显示折叠箭头，点击折叠展开
+    // （折叠范围由语言解析提供，纯文本无折叠点；foldGutter 内含 codeFolding）
+    foldGutter(),
     highlightActiveLine(),
     indent,
     EditorView.updateListener.of((u) => {

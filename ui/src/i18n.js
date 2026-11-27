@@ -532,6 +532,9 @@ export function cmPhrases() {
     "on line": "所在行",
     "Go to line": "转到行",
     "go to line": "转到行",
+    // 折叠槽悬停提示（@codemirror/language foldGutter）
+    "Fold line": "折叠行",
+    "Unfold line": "展开行",
   };
 }
 
