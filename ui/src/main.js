@@ -6,7 +6,7 @@ import { initMenus, initEditorContextMenu } from "./menus.js";
 import { initToolbars, updateToolbarOverflow } from "./toolbar.js";
 import { initStatusbar } from "./statusbar.js";
 import { openSettings, closeSettings } from "./settings.js";
-import { initMarkdownPreview, renderMdPreview, syncMdSegButtons } from "./mdpreview.js";
+import { initMarkdownPreview, renderMdPreview, syncMdSegButtons, mdSplitActive } from "./mdpreview.js";
 import { initPdfViewer, isPdfTab, renderPdfTab, zoomPdf, resetPdfZoom } from "./pdfviewer.js";
 import { initBrowserViewer, isBrowserTab, renderBrowserTab, browserReload, newBrowserTab } from "./browser.js";
 import { syncTabNotice } from "./ui.js";
@@ -290,17 +290,20 @@ function zoom(delta) {
   setZoom(next);
 }
 
-// 内容视图统一仲裁（v1.7 / v1.9）：编辑区 / md 预览 / pdf 查看器 / 浏览器视图四选一
+// 内容视图统一仲裁（v1.7 / v1.9 / v1.10）：编辑区 / md 预览 / md 分屏 / pdf 查看器 / 浏览器视图五选一
 function syncContentView() {
   const tab = activeTab();
   const isPdf = isPdfTab(tab);
   const isBrowser = isBrowserTab(tab);
   const isMd = !!(tab && tab.lang === "markdown");
   const mdPreview = isMd && tab.mode === "wysiwyg";
-  syncMdSegButtons(); // 编辑/预览分段按钮高亮跟随当前标签的模式
+  const mdSplit = isMd && tab.mode === "split";
+  syncMdSegButtons(); // 编辑/分屏/预览分段按钮高亮跟随当前标签的模式
   document.getElementById("editor").hidden = isPdf || mdPreview || isBrowser;
   document.getElementById("md-bar").hidden = !isMd;
-  document.getElementById("md-preview").hidden = !(isMd && mdPreview);
+  document.getElementById("split-divider").hidden = !mdSplit;
+  document.getElementById("md-preview").hidden = !(isMd && (mdPreview || mdSplit));
+  document.getElementById("content").classList.toggle("vsplit", mdSplit); // 分屏横排布局
   document.getElementById("pdf-bar").hidden = !isPdf;
   document.getElementById("pdf-view").hidden = !isPdf;
   document.getElementById("browser-bar").hidden = !isBrowser;
@@ -308,6 +311,9 @@ function syncContentView() {
   document.getElementById("statusbar").hidden = isPdf || isBrowser; // 只读视图：行/列、语言、编码均无意义
   if (isMd && mdPreview) {
     import("./mdpreview.js").then((m) => m.renderMdPreview());
+  } else if (isMd && mdSplit) {
+    // 分屏：渲染（带 data-line 锚点）并对齐到编辑区顶部可见位置
+    import("./mdpreview.js").then((m) => m.renderMdPreview({ align: true }));
   } else if (isPdf) {
     import("./pdfviewer.js").then((m) => m.renderPdfTab());
   } else if (isBrowser) {
@@ -364,8 +370,17 @@ function handleCmUpdate(u) {
     }
     document.title = `${tab.title}${tab.dirty ? " *" : ""} - ${APP_NAME}`;
     scheduleSessionSave();
+    scheduleSplitPreviewRerender(); // 分屏编辑：预览随源码实时刷新（防抖）
   }
   if (u.selectionSet || u.docChanged) updateStatus();
+}
+
+// 分屏编辑的预览实时刷新（300ms 防抖；保留滚动位置由 renderMdPreview 处理）
+let splitRerenderTimer = 0;
+function scheduleSplitPreviewRerender() {
+  if (!mdSplitActive(activeTab())) return;
+  clearTimeout(splitRerenderTimer);
+  splitRerenderTimer = setTimeout(() => renderMdPreview(), 300);
 }
 
 // 用户字体目录（exe 同级 fonts/）：枚举 + @font-face 注入，字体下拉追加选项（v1.7）

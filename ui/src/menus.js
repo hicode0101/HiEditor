@@ -158,7 +158,8 @@ function viewItems() {
       disabled: !isMd,
       submenu: [
         { label: t("view.wysiwyg"), checked: isMd && tab.mode === "wysiwyg", disabled: !isMd, action: () => setMarkdownMode("wysiwyg") },
-        { label: t("view.source"), checked: isMd && tab.mode !== "wysiwyg", disabled: !isMd, action: () => setMarkdownMode("source") },
+        { label: t("view.split"), checked: isMd && tab.mode === "split", disabled: !isMd, action: () => switchMdMode("split") },
+        { label: t("view.source"), checked: isMd && tab.mode === "source", disabled: !isMd, action: () => setMarkdownMode("source") },
       ],
     },
   ];

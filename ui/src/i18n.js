@@ -52,6 +52,7 @@ const ZH = {
   "view.wordWrap": "自动换行",
   "view.editModeGroup": "编辑模式",
   "view.wysiwyg": "所见即所得",
+  "view.split": "分屏编辑",
   "view.source": "源码",
 
   "toolbar.heading": "标题",
@@ -207,6 +208,7 @@ const ZH = {
   "settings.restoreSession.desc": "恢复所有标签（含未保存内容）",
   "settings.close": "关闭",
   "mdseg.edit": "编辑",
+  "mdseg.split": "分屏编辑",
   "mdseg.preview": "预览",
   "pdf.pageInput": "当前页码，输入后回车跳转",
   "pdf.prevPage": "上一页",
@@ -305,6 +307,7 @@ const EN = {
   "view.wordWrap": "Word Wrap",
   "view.editModeGroup": "Edit Mode",
   "view.wysiwyg": "WYSIWYG",
+  "view.split": "Split Edit",
   "view.source": "Source",
 
   "toolbar.heading": "Heading",
@@ -460,6 +463,7 @@ const EN = {
   "settings.restoreSession.desc": "Restore all tabs (including unsaved content)",
   "settings.close": "Close",
   "mdseg.edit": "Edit",
+  "mdseg.split": "Split Edit",
   "mdseg.preview": "Preview",
   "pdf.pageInput": "Current page, type and press Enter to jump",
   "pdf.prevPage": "Previous Page",

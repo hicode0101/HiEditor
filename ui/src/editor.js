@@ -7,6 +7,7 @@ import { scheduleSessionSave } from "./session.js";
 import { t, cmPhrases } from "./i18n.js";
 import { APP_NAME } from "./constants.js";
 import { undo as cmUndo, redo as cmRedo, setPhrases as cmSetPhrases, openSearchPanel } from "/vendor/cm.js";
+import { registerSplitEditor, onEditorScrolled } from "./splitSync.js";
 
 let cm = null; // createEditor 返回的 API（view/setDoc/setLanguage/setDark/setWrap/focus）
 let wrapOn = false;
@@ -17,7 +18,10 @@ export function initEditorInstance(api) {
   api.view.scrollDOM.addEventListener("scroll", () => {
     const tab = activeTab();
     if (tab) tab.scroll = api.view.scrollDOM.scrollTop;
+    // 分屏模式：预览区跟随（不 import mdpreview.js，避免循环引用）
+    if (tab && tab.lang === "markdown" && tab.mode === "split") onEditorScrolled();
   });
+  registerSplitEditor(api.view); // 分屏滚动同步（splitSync.js）持有 CM 视图
 }
 
 export function editorHostEl() {
